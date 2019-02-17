@@ -30,6 +30,7 @@ type Store struct {
 	adapter    Adapter
 	tableName  string
 	logger     Logger
+	gcDisabled bool
 	gcInterval int
 	ticker     *time.Ticker
 }
@@ -58,9 +59,11 @@ func NewStore(adapter Adapter, options ...Option) *Store {
 		o(store)
 	}
 
-	store.ticker = time.NewTicker(time.Second * time.Duration(store.gcInterval))
+	if !store.gcDisabled {
+		store.ticker = time.NewTicker(time.Second * time.Duration(store.gcInterval))
+		go store.gc()
+	}
 
-	go store.gc()
 	return store
 }
 
