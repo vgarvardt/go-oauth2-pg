@@ -6,29 +6,35 @@ import (
 	pgxHelpers "github.com/vgarvardt/pgx-helpers"
 )
 
+// ConnPoolAdapter is the adapter type for PGx connection pool connection type
 type ConnPoolAdapter struct {
 	conn *pgx.ConnPool
 }
 
+// NewConnPoolAdapter instantiates PGx connection pool adapter
 func NewConnPoolAdapter(conn *pgx.ConnPool) *ConnPoolAdapter {
 	return &ConnPoolAdapter{conn}
 }
 
+// ConnPoolAdapter is the adapter type for PGx connection connection type
 type ConnAdapter struct {
 	conn *pgx.Conn
 }
 
+// NewConnAdapter instantiates PGx connection adapter
 func NewConnAdapter(conn *pgx.Conn) *ConnAdapter {
 	return &ConnAdapter{conn}
 }
 
-func (a *ConnPoolAdapter) Exec(query string, params ...interface{}) error {
-	_, err := a.conn.Exec(query, params...)
+// Exec runs a query and returns an error if any
+func (a *ConnPoolAdapter) Exec(query string, args ...interface{}) error {
+	_, err := a.conn.Exec(query, args...)
 	return err
 }
 
-func (a *ConnPoolAdapter) SelectOne(dst interface{}, query string, params ...interface{}) error {
-	row := a.conn.QueryRow(query, params...)
+// SelectOne runs a select query and scans the object into a struct or returns an error
+func (a *ConnPoolAdapter) SelectOne(dst interface{}, query string, args ...interface{}) error {
+	row := a.conn.QueryRow(query, args...)
 	if err := pgxHelpers.ScanStruct(row, dst); err != nil {
 		if err == pgx.ErrNoRows {
 			return pg.ErrNoRows
@@ -39,13 +45,15 @@ func (a *ConnPoolAdapter) SelectOne(dst interface{}, query string, params ...int
 	return nil
 }
 
-func (a *ConnAdapter) Exec(query string, params ...interface{}) error {
-	_, err := a.conn.Exec(query, params...)
+// Exec runs a query and returns an error if any
+func (a *ConnAdapter) Exec(query string, args ...interface{}) error {
+	_, err := a.conn.Exec(query, args...)
 	return err
 }
 
-func (a *ConnAdapter) SelectOne(dst interface{}, query string, params ...interface{}) error {
-	row := a.conn.QueryRow(query, params...)
+// SelectOne runs a select query and scans the object into a struct or returns an error
+func (a *ConnAdapter) SelectOne(dst interface{}, query string, args ...interface{}) error {
+	row := a.conn.QueryRow(query, args...)
 	if err := pgxHelpers.ScanStruct(row, dst); err != nil {
 		if err == pgx.ErrNoRows {
 			return pg.ErrNoRows
