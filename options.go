@@ -1,5 +1,7 @@
 package pg
 
+import "time"
+
 // Option is teh configuration options type for store
 type Option func(s *Store)
 
@@ -11,7 +13,7 @@ func WithTableName(tableName string) Option {
 }
 
 // WithGCInterval returns option that sets store garbage collection interval
-func WithGCInterval(gcInterval int) Option {
+func WithGCInterval(gcInterval time.Duration) Option {
 	return func(s *Store) {
 		s.gcInterval = gcInterval
 	}
@@ -28,5 +30,12 @@ func WithLogger(logger Logger) Option {
 func WithGCDisabled() Option {
 	return func(s *Store) {
 		s.gcDisabled = true
+	}
+}
+
+// WithInitTableDisabled returns option that disables table creation on storage instantiation
+func WithInitTableDisabled() Option {
+	return func(s *Store) {
+		s.initTableDisabled = true
 	}
 }

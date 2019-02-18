@@ -10,21 +10,25 @@ import (
 )
 
 func TestWithGCDisabled(t *testing.T) {
-	store := NewStore(nil, WithGCDisabled())
+	store, err := NewStore(nil, WithGCDisabled(), WithInitTableDisabled())
+	require.NoError(t, err)
 	assert.True(t, store.gcDisabled)
+	assert.True(t, store.initTableDisabled)
 }
 
 func TestWithTableName(t *testing.T) {
 	randomName := time.Now().String()
 
-	store := NewStore(nil, WithTableName(randomName), WithGCDisabled())
+	store, err := NewStore(nil, WithTableName(randomName), WithGCDisabled(), WithInitTableDisabled())
+	require.NoError(t, err)
 	assert.Equal(t, randomName, store.tableName)
 }
 
 func TestWithGCInterval(t *testing.T) {
-	randomInterval := rand.Int()
+	randomInterval := time.Duration(rand.Int63())
 
-	store := NewStore(nil, WithGCInterval(randomInterval), WithGCDisabled())
+	store, err := NewStore(nil, WithGCInterval(randomInterval), WithGCDisabled(), WithInitTableDisabled())
+	require.NoError(t, err)
 	assert.Equal(t, randomInterval, store.gcInterval)
 }
 
@@ -41,7 +45,8 @@ func (l *memoryLogger) Printf(format string, v ...interface{}) {
 func TestWithLogger(t *testing.T) {
 	l := new(memoryLogger)
 
-	store := NewStore(nil, WithLogger(l), WithGCDisabled())
+	store, err := NewStore(nil, WithLogger(l), WithGCDisabled(), WithInitTableDisabled())
+	require.NoError(t, err)
 
 	store.logger.Printf("log1", 1, "2", "333")
 	store.logger.Printf("log2", 12, "22")

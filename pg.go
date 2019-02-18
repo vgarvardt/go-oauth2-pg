@@ -27,12 +27,15 @@ type Logger interface {
 
 // Store mysql token store
 type Store struct {
-	adapter    Adapter
-	tableName  string
-	logger     Logger
+	adapter   Adapter
+	tableName string
+	logger    Logger
+
 	gcDisabled bool
-	gcInterval int
+	gcInterval time.Duration
 	ticker     *time.Ticker
+
+	initTableDisabled bool
 }
 
 // StoreItem data item
@@ -43,33 +46,44 @@ type StoreItem struct {
 	Code      string    `db:"code"`
 	Access    string    `db:"access"`
 	Refresh   string    `db:"refresh"`
-	Data      string    `db:"data"`
+	Data      []byte    `db:"data"`
 }
 
 // NewStore creates PostgreSQL store instance
-func NewStore(adapter Adapter, options ...Option) *Store {
+func NewStore(adapter Adapter, options ...Option) (*Store, error) {
 	store := &Store{
 		adapter:    adapter,
 		tableName:  "oauth2_token",
 		logger:     log.New(os.Stderr, "[OAUTH2-PG-ERROR]", log.LstdFlags),
-		gcInterval: 600,
+		gcInterval: 10 * time.Minute,
 	}
 
 	for _, o := range options {
 		o(store)
 	}
 
+	var err error
+	if !store.initTableDisabled {
+		err = store.initTable()
+	}
+
+	if err != nil {
+		return store, err
+	}
+
 	if !store.gcDisabled {
-		store.ticker = time.NewTicker(time.Second * time.Duration(store.gcInterval))
+		store.ticker = time.NewTicker(store.gcInterval)
 		go store.gc()
 	}
 
-	return store
+	return store, err
 }
 
 // Close close the store
 func (s *Store) Close() error {
-	s.ticker.Stop()
+	if !s.gcDisabled {
+		s.ticker.Stop()
+	}
 	return nil
 }
 
@@ -79,23 +93,43 @@ func (s *Store) gc() {
 	}
 }
 
+func (s *Store) initTable() error {
+	return s.adapter.Exec(fmt.Sprintf(`
+CREATE TABLE IF NOT EXISTS %[1]s (
+  id         BIGSERIAL   NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  code       TEXT        NOT NULL,
+  access     TEXT        NOT NULL,
+  refresh    TEXT        NOT NULL,
+  data       JSONB       NOT NULL,
+  CONSTRAINT %[1]s_pkey PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_%[1]s_expires_at ON %[1]s (expires_at);
+CREATE INDEX IF NOT EXISTS idx_%[1]s_code ON %[1]s (code);
+CREATE INDEX IF NOT EXISTS idx_%[1]s_access ON %[1]s (access);
+CREATE INDEX IF NOT EXISTS idx_%[1]s_refresh ON %[1]s (refresh);
+`, s.tableName))
+}
+
 func (s *Store) clean() {
 	now := time.Now()
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE expires_at <= $1", s.tableName), now)
 	if err != nil {
-		s.errorf("Error while cleaning out outdated entities: %+v", err)
+		s.logger.Printf("Error while cleaning out outdated entities: %+v", err)
 	}
-}
-
-func (s *Store) errorf(format string, args ...interface{}) {
-	s.logger.Printf(format, args...)
 }
 
 // Create create and store the new token information
 func (s *Store) Create(info oauth2.TokenInfo) error {
-	buf, _ := jsoniter.Marshal(info)
+	buf, err := jsoniter.Marshal(info)
+	if err != nil {
+		return err
+	}
+
 	item := &StoreItem{
-		Data:      string(buf),
+		Data:      buf,
 		CreatedAt: time.Now(),
 	}
 
@@ -125,9 +159,8 @@ func (s *Store) Create(info oauth2.TokenInfo) error {
 
 // RemoveByCode delete the authorization code
 func (s *Store) RemoveByCode(code string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName)
-	err := s.adapter.Exec(query, code)
-	if err != nil && err == ErrNoRows {
+	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName), code)
+	if err == ErrNoRows {
 		return nil
 	}
 	return err
@@ -135,9 +168,8 @@ func (s *Store) RemoveByCode(code string) error {
 
 // RemoveByAccess use the access token to delete the token information
 func (s *Store) RemoveByAccess(access string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName)
-	err := s.adapter.Exec(query, access)
-	if err != nil && err == ErrNoRows {
+	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName), access)
+	if err == ErrNoRows {
 		return nil
 	}
 	return err
@@ -145,17 +177,16 @@ func (s *Store) RemoveByAccess(access string) error {
 
 // RemoveByRefresh use the refresh token to delete the token information
 func (s *Store) RemoveByRefresh(refresh string) error {
-	query := fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName)
-	err := s.adapter.Exec(query, refresh)
-	if err != nil && err == ErrNoRows {
+	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName), refresh)
+	if err == ErrNoRows {
 		return nil
 	}
 	return err
 }
 
-func (s *Store) toTokenInfo(data string) (oauth2.TokenInfo, error) {
+func (s *Store) toTokenInfo(data []byte) (oauth2.TokenInfo, error) {
 	var tm models.Token
-	err := jsoniter.Unmarshal([]byte(data), &tm)
+	err := jsoniter.Unmarshal(data, &tm)
 	return &tm, err
 }
 
@@ -165,13 +196,8 @@ func (s *Store) GetByCode(code string) (oauth2.TokenInfo, error) {
 		return nil, nil
 	}
 
-	query := fmt.Sprintf("SELECT * FROM %s WHERE code = $1", s.tableName)
 	var item StoreItem
-	err := s.adapter.SelectOne(&item, query, code)
-	if err != nil {
-		if err == ErrNoRows {
-			return nil, nil
-		}
+	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE code = $1", s.tableName), code); err != nil {
 		return nil, err
 	}
 	return s.toTokenInfo(item.Data)
@@ -183,13 +209,8 @@ func (s *Store) GetByAccess(access string) (oauth2.TokenInfo, error) {
 		return nil, nil
 	}
 
-	query := fmt.Sprintf("SELECT * FROM %s WHERE access = $1", s.tableName)
 	var item StoreItem
-	err := s.adapter.SelectOne(&item, query, access)
-	if err != nil {
-		if err == ErrNoRows {
-			return nil, nil
-		}
+	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE access = $1", s.tableName), access); err != nil {
 		return nil, err
 	}
 	return s.toTokenInfo(item.Data)
@@ -201,13 +222,8 @@ func (s *Store) GetByRefresh(refresh string) (oauth2.TokenInfo, error) {
 		return nil, nil
 	}
 
-	query := fmt.Sprintf("SELECT * FROM %s WHERE refresh = $1", s.tableName)
 	var item StoreItem
-	err := s.adapter.SelectOne(&item, query, refresh)
-	if err != nil {
-		if err == ErrNoRows {
-			return nil, nil
-		}
+	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE refresh = $1", s.tableName), refresh); err != nil {
 		return nil, err
 	}
 	return s.toTokenInfo(item.Data)
