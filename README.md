@@ -37,3 +37,5 @@ func main() {
 ```
 Copyright (c) 2018 Vladimir Garvardt
 ```
+
+docker run --rm -p 5432:5432 -it -e POSTGRES_PASSWORD=oauth2 -e POSTGRES_USER=oauth2 -e POSTGRES_DB=oauth2 postgres:10
