@@ -1,14 +1,12 @@
-package sql
+package pgx_adapter
 
 import (
-	"database/sql"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
-	_ "github.com/jackc/pgx/stdlib"
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vgarvardt/go-oauth2-pg"
@@ -30,6 +28,12 @@ func TestMain(m *testing.M) {
 type memoryLogger struct {
 	formats []string
 	args    [][]interface{}
+
+	pgxLogs []struct {
+		level pgx.LogLevel
+		msg   string
+		data  map[string]interface{}
+	}
 }
 
 func (l *memoryLogger) Printf(format string, v ...interface{}) {
@@ -37,21 +41,34 @@ func (l *memoryLogger) Printf(format string, v ...interface{}) {
 	l.args = append(l.args, v)
 }
 
+func (l *memoryLogger) Log(level pgx.LogLevel, msg string, data map[string]interface{}) {
+	l.pgxLogs = append(l.pgxLogs, struct {
+		level pgx.LogLevel
+		msg   string
+		data  map[string]interface{}
+	}{level: level, msg: msg, data: data})
+}
+
 func generateTableName() string {
 	return fmt.Sprintf("token_%d", time.Now().UnixNano())
 }
 
-func TestNewSQL(t *testing.T) {
+func TestNewConn(t *testing.T) {
 	l := new(memoryLogger)
 
-	conn, err := sql.Open("pgx", uri)
+	pgxConnConfig, err := pgx.ParseURI(uri)
+	require.NoError(t, err)
+
+	pgxConnConfig.Logger = l
+
+	pgxConn, err := pgx.Connect(pgxConnConfig)
 	require.NoError(t, err)
 
 	defer func() {
-		assert.NoError(t, conn.Close())
+		assert.NoError(t, pgxConn.Close())
 	}()
 
-	adapter := NewSQL(conn)
+	adapter := NewConn(pgxConn)
 	tableName := generateTableName()
 
 	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
@@ -63,17 +80,22 @@ func TestNewSQL(t *testing.T) {
 	runStoreTest(t, store, l)
 }
 
-func TestNewSQLx(t *testing.T) {
+func TestNewConnPool(t *testing.T) {
 	l := new(memoryLogger)
 
-	conn, err := sql.Open("pgx", uri)
+	pgxConnConfig, err := pgx.ParseURI(uri)
 	require.NoError(t, err)
 
-	defer func() {
-		assert.NoError(t, conn.Close())
-	}()
+	pgxConnConfig.Logger = l
 
-	adapter := NewSQLx(sqlx.NewDb(conn, ""))
+	pgxPoolConfig := pgx.ConnPoolConfig{ConnConfig: pgxConnConfig}
+
+	pgXConnPool, err := pgx.NewConnPool(pgxPoolConfig)
+	require.NoError(t, err)
+
+	defer pgXConnPool.Close()
+
+	adapter := NewConnPool(pgXConnPool)
 	tableName := generateTableName()
 
 	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
