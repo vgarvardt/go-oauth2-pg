@@ -107,7 +107,7 @@ func (s *TokenStore) clean() {
 	}
 }
 
-// Create create and store the new token information
+// Create creates and stores the new token information
 func (s *TokenStore) Create(info oauth2.TokenInfo) error {
 	buf, err := jsoniter.Marshal(info)
 	if err != nil {
@@ -143,7 +143,7 @@ func (s *TokenStore) Create(info oauth2.TokenInfo) error {
 	)
 }
 
-// RemoveByCode delete the authorization code
+// RemoveByCode deletes the authorization code
 func (s *TokenStore) RemoveByCode(code string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName), code)
 	if err == ErrNoRows {
@@ -152,7 +152,7 @@ func (s *TokenStore) RemoveByCode(code string) error {
 	return err
 }
 
-// RemoveByAccess use the access token to delete the token information
+// RemoveByAccess uses the access token to delete the token information
 func (s *TokenStore) RemoveByAccess(access string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName), access)
 	if err == ErrNoRows {
@@ -161,7 +161,7 @@ func (s *TokenStore) RemoveByAccess(access string) error {
 	return err
 }
 
-// RemoveByRefresh use the refresh token to delete the token information
+// RemoveByRefresh uses the refresh token to delete the token information
 func (s *TokenStore) RemoveByRefresh(refresh string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName), refresh)
 	if err == ErrNoRows {
@@ -176,7 +176,7 @@ func (s *TokenStore) toTokenInfo(data []byte) (oauth2.TokenInfo, error) {
 	return &tm, err
 }
 
-// GetByCode use the authorization code for token information data
+// GetByCode uses the authorization code for token information data
 func (s *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 	if code == "" {
 		return nil, nil
@@ -186,10 +186,11 @@ func (s *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE code = $1", s.tableName), code); err != nil {
 		return nil, err
 	}
+
 	return s.toTokenInfo(item.Data)
 }
 
-// GetByAccess use the access token for token information data
+// GetByAccess uses the access token for token information data
 func (s *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, error) {
 	if access == "" {
 		return nil, nil
@@ -199,10 +200,11 @@ func (s *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, error) {
 	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE access = $1", s.tableName), access); err != nil {
 		return nil, err
 	}
+
 	return s.toTokenInfo(item.Data)
 }
 
-// GetByRefresh use the refresh token for token information data
+// GetByRefresh uses the refresh token for token information data
 func (s *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, error) {
 	if refresh == "" {
 		return nil, nil
@@ -212,5 +214,6 @@ func (s *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, error) {
 	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE refresh = $1", s.tableName), refresh); err != nil {
 		return nil, err
 	}
+
 	return s.toTokenInfo(item.Data)
 }
