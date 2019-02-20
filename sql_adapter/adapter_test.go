@@ -1,4 +1,4 @@
-package sql
+package sql_adapter
 
 import (
 	"database/sql"

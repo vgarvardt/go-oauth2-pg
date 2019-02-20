@@ -1,4 +1,4 @@
-package pgx
+package pgx_adapter
 
 import (
 	"fmt"
