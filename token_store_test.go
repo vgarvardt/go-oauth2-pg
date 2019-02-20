@@ -42,10 +42,10 @@ func (a *mockAdapter) SelectOne(dst interface{}, query string, args ...interface
 	return nil
 }
 
-func Test_initTable(t *testing.T) {
+func TestTokenStore_initTable(t *testing.T) {
 	adapter := new(mockAdapter)
 
-	store, err := NewStore(adapter, WithGCDisabled())
+	store, err := NewTokenStore(adapter, WithTokenStoreGCDisabled())
 	require.NoError(t, err)
 
 	defer func() {
@@ -59,10 +59,10 @@ func Test_initTable(t *testing.T) {
 	assert.Equal(t, 1, strings.Index(adapter.execCalls[0].query, "CREATE TABLE IF NOT EXISTS"))
 }
 
-func Test_gc(t *testing.T) {
+func TestTokenStore_gc(t *testing.T) {
 	adapter := new(mockAdapter)
 
-	store, err := NewStore(adapter, WithInitTableDisabled(), WithGCInterval(time.Second))
+	store, err := NewTokenStore(adapter, WithTokenStoreInitTableDisabled(), WithTokenStoreGCInterval(time.Second))
 	require.NoError(t, err)
 
 	defer func() {

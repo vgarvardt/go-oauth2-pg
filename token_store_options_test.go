@@ -9,25 +9,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWithGCDisabled(t *testing.T) {
-	store, err := NewStore(nil, WithGCDisabled(), WithInitTableDisabled())
+func TestWithTokenStoreGCDisabled(t *testing.T) {
+	store, err := NewTokenStore(nil, WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.True(t, store.gcDisabled)
 	assert.True(t, store.initTableDisabled)
 }
 
-func TestWithTableName(t *testing.T) {
+func TestWithTokenStoreTableName(t *testing.T) {
 	randomName := time.Now().String()
 
-	store, err := NewStore(nil, WithTableName(randomName), WithGCDisabled(), WithInitTableDisabled())
+	store, err := NewTokenStore(nil, WithTokenStoreTableName(randomName), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.Equal(t, randomName, store.tableName)
 }
 
-func TestWithGCInterval(t *testing.T) {
+func TestWithTokenStoreGCInterval(t *testing.T) {
 	randomInterval := time.Duration(rand.Int63())
 
-	store, err := NewStore(nil, WithGCInterval(randomInterval), WithGCDisabled(), WithInitTableDisabled())
+	store, err := NewTokenStore(nil, WithTokenStoreGCInterval(randomInterval), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.Equal(t, randomInterval, store.gcInterval)
 }
@@ -42,10 +42,10 @@ func (l *memoryLogger) Printf(format string, v ...interface{}) {
 	l.args = append(l.args, v)
 }
 
-func TestWithLogger(t *testing.T) {
+func TestWithTokenStoreLogger(t *testing.T) {
 	l := new(memoryLogger)
 
-	store, err := NewStore(nil, WithLogger(l), WithGCDisabled(), WithInitTableDisabled())
+	store, err := NewTokenStore(nil, WithTokenStoreLogger(l), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 
 	store.logger.Printf("log1", 1, "2", "333")

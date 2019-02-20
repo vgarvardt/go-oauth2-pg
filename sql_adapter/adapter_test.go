@@ -37,8 +37,12 @@ func (l *memoryLogger) Printf(format string, v ...interface{}) {
 	l.args = append(l.args, v)
 }
 
-func generateTableName() string {
+func generateTokenTableName() string {
 	return fmt.Sprintf("token_%d", time.Now().UnixNano())
+}
+
+func generateClientTableName() string {
+	return fmt.Sprintf("client_%d", time.Now().UnixNano())
 }
 
 func TestNew(t *testing.T) {
@@ -52,15 +56,27 @@ func TestNew(t *testing.T) {
 	}()
 
 	adapter := New(conn)
-	tableName := generateTableName()
 
-	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
+	tokenStore, err := pg.NewTokenStore(
+		adapter,
+		pg.WithTokenStoreLogger(l),
+		pg.WithTokenStoreTableName(generateTokenTableName()),
+		pg.WithTokenStoreGCInterval(time.Second),
+	)
 	require.NoError(t, err)
 	defer func() {
-		assert.NoError(t, store.Close())
+		assert.NoError(t, tokenStore.Close())
 	}()
 
-	runStoreTest(t, store, l)
+	clientStore, err := pg.NewClientStore(
+		adapter,
+		pg.WithClientStoreLogger(l),
+		pg.WithClientStoreTableName(generateClientTableName()),
+	)
+	require.NoError(t, err)
+
+	runTokenStoreTest(t, tokenStore, l)
+	runClientStoreTest(t, clientStore)
 }
 
 func TestNewX(t *testing.T) {
@@ -74,21 +90,33 @@ func TestNewX(t *testing.T) {
 	}()
 
 	adapter := NewX(sqlx.NewDb(conn, ""))
-	tableName := generateTableName()
 
-	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
+	tokenStore, err := pg.NewTokenStore(
+		adapter,
+		pg.WithTokenStoreLogger(l),
+		pg.WithTokenStoreTableName(generateTokenTableName()),
+		pg.WithTokenStoreGCInterval(time.Second),
+	)
 	require.NoError(t, err)
 	defer func() {
-		assert.NoError(t, store.Close())
+		assert.NoError(t, tokenStore.Close())
 	}()
 
-	runStoreTest(t, store, l)
+	clientStore, err := pg.NewClientStore(
+		adapter,
+		pg.WithClientStoreLogger(l),
+		pg.WithClientStoreTableName(generateClientTableName()),
+	)
+	require.NoError(t, err)
+
+	runTokenStoreTest(t, tokenStore, l)
+	runClientStoreTest(t, clientStore)
 }
 
-func runStoreTest(t *testing.T, store *pg.Store, l *memoryLogger) {
-	runStoreCodeTest(t, store)
-	runStoreAccessTest(t, store)
-	runStoreRefreshTest(t, store)
+func runTokenStoreTest(t *testing.T, store *pg.TokenStore, l *memoryLogger) {
+	runTokenStoreCodeTest(t, store)
+	runTokenStoreAccessTest(t, store)
+	runTokenStoreRefreshTest(t, store)
 
 	// sleep for a while just to wait for GC run for sure to ensure there were no errors there
 	time.Sleep(3 * time.Second)
@@ -96,7 +124,7 @@ func runStoreTest(t *testing.T, store *pg.Store, l *memoryLogger) {
 	assert.Equal(t, 0, len(l.formats))
 }
 
-func runStoreCodeTest(t *testing.T, store *pg.Store) {
+func runTokenStoreCodeTest(t *testing.T, store *pg.TokenStore) {
 	code := fmt.Sprintf("code %s", time.Now().String())
 
 	tokenCode := models.NewToken()
@@ -115,7 +143,7 @@ func runStoreCodeTest(t *testing.T, store *pg.Store) {
 	assert.Equal(t, pg.ErrNoRows, err)
 }
 
-func runStoreAccessTest(t *testing.T, store *pg.Store) {
+func runTokenStoreAccessTest(t *testing.T, store *pg.TokenStore) {
 	code := fmt.Sprintf("access %s", time.Now().String())
 
 	tokenCode := models.NewToken()
@@ -134,7 +162,7 @@ func runStoreAccessTest(t *testing.T, store *pg.Store) {
 	assert.Equal(t, pg.ErrNoRows, err)
 }
 
-func runStoreRefreshTest(t *testing.T, store *pg.Store) {
+func runTokenStoreRefreshTest(t *testing.T, store *pg.TokenStore) {
 	code := fmt.Sprintf("refresh %s", time.Now().String())
 
 	tokenCode := models.NewToken()
@@ -151,4 +179,22 @@ func runStoreRefreshTest(t *testing.T, store *pg.Store) {
 
 	_, err = store.GetByRefresh(code)
 	assert.Equal(t, pg.ErrNoRows, err)
+}
+
+func runClientStoreTest(t *testing.T, store *pg.ClientStore) {
+	originalClient := &models.Client{
+		ID:     fmt.Sprintf("id %s", time.Now().String()),
+		Secret: fmt.Sprintf("secret %s", time.Now().String()),
+		Domain: fmt.Sprintf("domain %s", time.Now().String()),
+		UserID: fmt.Sprintf("user id %s", time.Now().String()),
+	}
+
+	require.NoError(t, store.Create(originalClient))
+
+	client, err := store.GetByID(originalClient.GetID())
+	require.NoError(t, err)
+	assert.Equal(t, originalClient.GetID(), client.GetID())
+	assert.Equal(t, originalClient.GetSecret(), client.GetSecret())
+	assert.Equal(t, originalClient.GetDomain(), client.GetDomain())
+	assert.Equal(t, originalClient.GetUserID(), client.GetUserID())
 }
