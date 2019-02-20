@@ -45,7 +45,7 @@ func (a *mockAdapter) SelectOne(dst interface{}, query string, args ...interface
 func Test_initTable(t *testing.T) {
 	adapter := new(mockAdapter)
 
-	store, err := NewStore(adapter, WithGCDisabled())
+	store, err := NewTokenStore(adapter, WithTokenStoreGCDisabled())
 	require.NoError(t, err)
 
 	defer func() {
@@ -62,7 +62,7 @@ func Test_initTable(t *testing.T) {
 func Test_gc(t *testing.T) {
 	adapter := new(mockAdapter)
 
-	store, err := NewStore(adapter, WithInitTableDisabled(), WithGCInterval(time.Second))
+	store, err := NewTokenStore(adapter, WithTokenStoreInitTableDisabled(), WithTokenStoreGCInterval(time.Second))
 	require.NoError(t, err)
 
 	defer func() {

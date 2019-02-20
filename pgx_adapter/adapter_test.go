@@ -71,7 +71,7 @@ func TestNewConn(t *testing.T) {
 	adapter := NewConn(pgxConn)
 	tableName := generateTableName()
 
-	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
+	store, err := pg.NewTokenStore(adapter, pg.WithTokenStoreLogger(l), pg.WithTokenStoreTableName(tableName), pg.WithTokenStoreGCInterval(time.Second))
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, store.Close())
@@ -98,7 +98,7 @@ func TestNewConnPool(t *testing.T) {
 	adapter := NewConnPool(pgXConnPool)
 	tableName := generateTableName()
 
-	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
+	store, err := pg.NewTokenStore(adapter, pg.WithTokenStoreLogger(l), pg.WithTokenStoreTableName(tableName), pg.WithTokenStoreGCInterval(time.Second))
 	require.NoError(t, err)
 	defer func() {
 		assert.NoError(t, store.Close())
@@ -107,7 +107,7 @@ func TestNewConnPool(t *testing.T) {
 	runStoreTest(t, store, l)
 }
 
-func runStoreTest(t *testing.T, store *pg.Store, l *memoryLogger) {
+func runStoreTest(t *testing.T, store *pg.TokenStore, l *memoryLogger) {
 	runStoreCodeTest(t, store)
 	runStoreAccessTest(t, store)
 	runStoreRefreshTest(t, store)
@@ -118,7 +118,7 @@ func runStoreTest(t *testing.T, store *pg.Store, l *memoryLogger) {
 	assert.Equal(t, 0, len(l.formats))
 }
 
-func runStoreCodeTest(t *testing.T, store *pg.Store) {
+func runStoreCodeTest(t *testing.T, store *pg.TokenStore) {
 	code := fmt.Sprintf("code %s", time.Now().String())
 
 	tokenCode := models.NewToken()
@@ -137,7 +137,7 @@ func runStoreCodeTest(t *testing.T, store *pg.Store) {
 	assert.Equal(t, pg.ErrNoRows, err)
 }
 
-func runStoreAccessTest(t *testing.T, store *pg.Store) {
+func runStoreAccessTest(t *testing.T, store *pg.TokenStore) {
 	code := fmt.Sprintf("access %s", time.Now().String())
 
 	tokenCode := models.NewToken()
@@ -156,7 +156,7 @@ func runStoreAccessTest(t *testing.T, store *pg.Store) {
 	assert.Equal(t, pg.ErrNoRows, err)
 }
 
-func runStoreRefreshTest(t *testing.T, store *pg.Store) {
+func runStoreRefreshTest(t *testing.T, store *pg.TokenStore) {
 	code := fmt.Sprintf("refresh %s", time.Now().String())
 
 	tokenCode := models.NewToken()
