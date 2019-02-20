@@ -2,12 +2,12 @@ package pg
 
 import (
 	"fmt"
-	"github.com/json-iterator/go"
-	"gopkg.in/oauth2.v3/models"
 	"log"
 	"os"
 
+	"github.com/json-iterator/go"
 	"gopkg.in/oauth2.v3"
+	"gopkg.in/oauth2.v3/models"
 )
 
 // ClientStore PostgreSQL client store
