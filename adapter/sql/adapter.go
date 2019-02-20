@@ -17,7 +17,7 @@ func NewSQL(conn *sql.DB) *Adapter {
 	return &Adapter{sqlx.NewDb(conn, "")}
 }
 
-// NewSQL instantiates sqlx.DB connection adapter
+// NewSQLx instantiates sqlx.DB connection adapter
 func NewSQLx(conn *sqlx.DB) *Adapter {
 	return &Adapter{conn}
 }

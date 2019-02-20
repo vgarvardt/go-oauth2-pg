@@ -1,5 +1,7 @@
 # PostgreSQL Storage for [OAuth 2.0](https://github.com/go-oauth2/oauth2)
 
+[![Build][Build-Status-Image]][Build-Status-Url] [![Codecov][codecov-image]][codecov-url] [![ReportCard][reportcard-image]][reportcard-url] [![GoDoc][godoc-image]][godoc-url] [![License][license-image]][license-url]
+
 ## Install
 
 ```bash
@@ -58,3 +60,20 @@ Now you can run tests using the running PostgreSQL instance using `PG_URI` envir
 ```bash
 PG_URI=postgres://oauth2:oauth2@localhost:5432/oauth2?sslmode=disable go test -cover ./...
 ```
+
+## MIT License
+
+```
+Copyright (c) 2019 Vladimir Garvardt
+```
+
+[Build-Status-Url]: https://travis-ci.org/vgarvardt/go-oauth2-pg
+[Build-Status-Image]: https://travis-ci.org/vgarvardt/go-oauth2-pg.svg?branch=master
+[codecov-url]: https://codecov.io/gh/vgarvardt/go-oauth2-pg
+[codecov-image]: https://codecov.io/gh/vgarvardt/go-oauth2-pg/branch/master/graph/badge.svg
+[reportcard-url]: https://goreportcard.com/report/github.com/vgarvardt/go-oauth2-pg
+[reportcard-image]: https://goreportcard.com/badge/github.com/vgarvardt/go-oauth2-pg
+[godoc-url]: https://godoc.org/github.com/vgarvardt/go-oauth2-pg
+[godoc-image]: https://godoc.org/github.com/vgarvardt/go-oauth2-pg?status.svg
+[license-url]: http://opensource.org/licenses/MIT
+[license-image]: https://img.shields.io/npm/l/express.svg
