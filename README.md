@@ -12,10 +12,10 @@ $ go get -u -v github.com/vgarvardt/go-oauth2-pg
 
 The store accepts an adapter interface that interacts with the DB. The package is bundled with the following adapter implementations
 
-- `database/sql` (e.g. [`github.com/lib/pq`](https://github.com/lib/pq)) - `github.com/vgarvardt/go-oauth2-pg/adapter/sql.NewSQL()`
-- [`github.com/jmoiron/sqlx.DB`](https://github.com/jmoiron/sqlx) - `github.com/vgarvardt/go-oauth2-pg/adapter/sqlx.NewSQLx()`
-- [`github.com/jackc/pgx.Conn`](https://github.com/jackc/pgx) - `github.com/vgarvardt/go-oauth2-pg/adapter/pgx.NewConnAdapter()`
-- [`github.com/jackc/pgx.ConnPool`](https://github.com/jackc/pgx) - `github.com/vgarvardt/go-oauth2-pg/adapter/pgx.NewConnPoolAdapter()`
+- `database/sql` (e.g. [`github.com/lib/pq`](https://github.com/lib/pq)) - `github.com/vgarvardt/go-oauth2-pg/sql_adapter.New()`
+- [`github.com/jmoiron/sqlx.DB`](https://github.com/jmoiron/sqlx) - `github.com/vgarvardt/go-oauth2-pg/sql_adapter.NewX()`
+- [`github.com/jackc/pgx.Conn`](https://github.com/jackc/pgx) - `github.com/vgarvardt/go-oauth2-pg/pgx_adapter.NewConn()`
+- [`github.com/jackc/pgx.ConnPool`](https://github.com/jackc/pgx) - `github.com/vgarvardt/go-oauth2-pg/pgx_adapter.NewConnPool()`
 
 ## Usage example
 
