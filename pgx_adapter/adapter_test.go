@@ -53,7 +53,7 @@ func generateTableName() string {
 	return fmt.Sprintf("token_%d", time.Now().UnixNano())
 }
 
-func TestNewConnAdapter(t *testing.T) {
+func TestNewConn(t *testing.T) {
 	l := new(memoryLogger)
 
 	pgxConnConfig, err := pgx.ParseURI(uri)
@@ -68,7 +68,7 @@ func TestNewConnAdapter(t *testing.T) {
 		assert.NoError(t, pgxConn.Close())
 	}()
 
-	adapter := NewConnAdapter(pgxConn)
+	adapter := NewConn(pgxConn)
 	tableName := generateTableName()
 
 	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
@@ -80,7 +80,7 @@ func TestNewConnAdapter(t *testing.T) {
 	runStoreTest(t, store, l)
 }
 
-func TestNewConnPoolAdapter(t *testing.T) {
+func TestNewConnPool(t *testing.T) {
 	l := new(memoryLogger)
 
 	pgxConnConfig, err := pgx.ParseURI(uri)
@@ -95,7 +95,7 @@ func TestNewConnPoolAdapter(t *testing.T) {
 
 	defer pgXConnPool.Close()
 
-	adapter := NewConnPoolAdapter(pgXConnPool)
+	adapter := NewConnPool(pgXConnPool)
 	tableName := generateTableName()
 
 	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))

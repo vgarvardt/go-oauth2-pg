@@ -41,7 +41,7 @@ func generateTableName() string {
 	return fmt.Sprintf("token_%d", time.Now().UnixNano())
 }
 
-func TestNewSQL(t *testing.T) {
+func TestNew(t *testing.T) {
 	l := new(memoryLogger)
 
 	conn, err := sql.Open("pgx", uri)
@@ -51,7 +51,7 @@ func TestNewSQL(t *testing.T) {
 		assert.NoError(t, conn.Close())
 	}()
 
-	adapter := NewSQL(conn)
+	adapter := New(conn)
 	tableName := generateTableName()
 
 	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))
@@ -63,7 +63,7 @@ func TestNewSQL(t *testing.T) {
 	runStoreTest(t, store, l)
 }
 
-func TestNewSQLx(t *testing.T) {
+func TestNewX(t *testing.T) {
 	l := new(memoryLogger)
 
 	conn, err := sql.Open("pgx", uri)
@@ -73,7 +73,7 @@ func TestNewSQLx(t *testing.T) {
 		assert.NoError(t, conn.Close())
 	}()
 
-	adapter := NewSQLx(sqlx.NewDb(conn, ""))
+	adapter := NewX(sqlx.NewDb(conn, ""))
 	tableName := generateTableName()
 
 	store, err := pg.NewStore(adapter, pg.WithLogger(l), pg.WithTableName(tableName), pg.WithGCInterval(time.Second))

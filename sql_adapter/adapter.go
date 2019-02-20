@@ -11,14 +11,14 @@ type Adapter struct {
 	conn *sqlx.DB
 }
 
-// NewSQL instantiates sqlx.DB connection adapter from sql.DB connection
-func NewSQL(conn *sql.DB) *Adapter {
+// New instantiates sqlx.DB connection adapter from sql.DB connection
+func New(conn *sql.DB) *Adapter {
 	// The driverName of the original database is required for named query support - we do not use it here
 	return &Adapter{sqlx.NewDb(conn, "")}
 }
 
-// NewSQLx instantiates sqlx.DB connection adapter
-func NewSQLx(conn *sqlx.DB) *Adapter {
+// NewX instantiates sqlx.DB connection adapter
+func NewX(conn *sqlx.DB) *Adapter {
 	return &Adapter{conn}
 }
 

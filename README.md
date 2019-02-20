@@ -28,7 +28,7 @@ import (
 
 	"github.com/jackc/pgx"
 	pg "github.com/vgarvardt/go-oauth2-pg"
-	pgxAdapter "github.com/vgarvardt/go-oauth2-pg/adapter/pgx"
+	pgxAdapter "github.com/vgarvardt/go-oauth2-pg/pgx_adapter"
 	"gopkg.in/oauth2.v3/manage"
 )
 
@@ -39,7 +39,7 @@ func main() {
 	manager := manage.NewDefaultManager()
 
 	// use PostgreSQL token store with pgx.Connection adapter
-	store, _ := pg.NewStore(pgxAdapter.NewConnAdapter(pgxConn), pg.WithGCInterval(time.Minute))
+	store, _ := pg.NewStore(pgxAdapter.NewConn(pgxConn), pg.WithGCInterval(time.Minute))
 	defer store.Close()
 
 	manager.MapTokenStorage(store)
