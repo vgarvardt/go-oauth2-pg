@@ -1,0 +1,28 @@
+language: go
+sudo: false
+
+go:
+  - "1.10"
+  - "1.11"
+  - "stable"
+
+services:
+  - postgresql
+
+addons:
+  postgresql: "9.6"
+
+env:
+  global:
+    - PG_URI=postgres://postgres@localhost:5432/oauth2_test?sslmode=disable
+
+before_install:
+  - psql -c 'create database oauth2_test;' -U postgres
+  - go get -u github.com/golang/dep/cmd/dep
+  - dep ensure -v -vendor-only
+
+script:
+  - go test -coverprofile=coverage.txt -covermode=atomic ./...
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
