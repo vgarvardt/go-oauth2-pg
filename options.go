@@ -2,7 +2,7 @@ package pg
 
 import "time"
 
-// Option is teh configuration options type for store
+// Option is the configuration options type for store
 type Option func(s *Store)
 
 // WithTableName returns option that sets store table name

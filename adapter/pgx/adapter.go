@@ -16,7 +16,7 @@ func NewConnPoolAdapter(conn *pgx.ConnPool) *ConnPoolAdapter {
 	return &ConnPoolAdapter{conn}
 }
 
-// ConnPoolAdapter is the adapter type for PGx connection connection type
+// ConnAdapter is the adapter type for PGx connection connection type
 type ConnAdapter struct {
 	conn *pgx.Conn
 }

@@ -12,6 +12,7 @@ import (
 	"gopkg.in/oauth2.v3/models"
 )
 
+// ErrNoRows is the driver-agnostic error returned when no record is found
 var ErrNoRows = errors.New("sql: no rows in result set")
 
 // Adapter represents DB access layer interface for different PostgreSQL drivers
