@@ -39,10 +39,14 @@ func main() {
 	manager := manage.NewDefaultManager()
 
 	// use PostgreSQL token store with pgx.Connection adapter
-	store, _ := pg.NewStore(pgxAdapter.NewConn(pgxConn), pg.WithGCInterval(time.Minute))
+	adapter := pgxAdapter.NewConn(pgxConn)
+	tokenStore, _ := pg.NewTokenStore(adapter, pg.WithTokenStoreGCInterval(time.Minute))
 	defer store.Close()
+	
+	clientStore, _ := pg.NewClientStore(adapter)
 
-	manager.MapTokenStorage(store)
+	manager.MapTokenStorage(tokenStore)
+	manager.MapClientStorage(clientStore)
 	// ...
 }
 ```
