@@ -41,7 +41,7 @@ func main() {
 	// use PostgreSQL token store with pgx.Connection adapter
 	adapter := pgxAdapter.NewConn(pgxConn)
 	tokenStore, _ := pg.NewTokenStore(adapter, pg.WithTokenStoreGCInterval(time.Minute))
-	defer store.Close()
+	defer tokenStore.Close()
 	
 	clientStore, _ := pg.NewClientStore(adapter)
 
