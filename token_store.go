@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/json-iterator/go"
+	"github.com/vgarvardt/go-pg-adapter"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 )
 
 // TokenStore PostgreSQL token store
 type TokenStore struct {
-	adapter   Adapter
+	adapter   pgadapter.Adapter
 	tableName string
 	logger    Logger
 
@@ -36,7 +37,7 @@ type TokenStoreItem struct {
 }
 
 // NewTokenStore creates PostgreSQL store instance
-func NewTokenStore(adapter Adapter, options ...TokenStoreOption) (*TokenStore, error) {
+func NewTokenStore(adapter pgadapter.Adapter, options ...TokenStoreOption) (*TokenStore, error) {
 	store := &TokenStore{
 		adapter:    adapter,
 		tableName:  "oauth2_tokens",
@@ -146,7 +147,7 @@ func (s *TokenStore) Create(info oauth2.TokenInfo) error {
 // RemoveByCode deletes the authorization code
 func (s *TokenStore) RemoveByCode(code string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName), code)
-	if err == ErrNoRows {
+	if err == pgadapter.ErrNoRows {
 		return nil
 	}
 	return err
@@ -155,7 +156,7 @@ func (s *TokenStore) RemoveByCode(code string) error {
 // RemoveByAccess uses the access token to delete the token information
 func (s *TokenStore) RemoveByAccess(access string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName), access)
-	if err == ErrNoRows {
+	if err == pgadapter.ErrNoRows {
 		return nil
 	}
 	return err
@@ -164,7 +165,7 @@ func (s *TokenStore) RemoveByAccess(access string) error {
 // RemoveByRefresh uses the refresh token to delete the token information
 func (s *TokenStore) RemoveByRefresh(refresh string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName), refresh)
-	if err == ErrNoRows {
+	if err == pgadapter.ErrNoRows {
 		return nil
 	}
 	return err

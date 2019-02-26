@@ -32,16 +32,6 @@ func TestWithTokenStoreGCInterval(t *testing.T) {
 	assert.Equal(t, randomInterval, store.gcInterval)
 }
 
-type memoryLogger struct {
-	formats []string
-	args    [][]interface{}
-}
-
-func (l *memoryLogger) Printf(format string, v ...interface{}) {
-	l.formats = append(l.formats, format)
-	l.args = append(l.args, v)
-}
-
 func TestWithTokenStoreLogger(t *testing.T) {
 	l := new(memoryLogger)
 
