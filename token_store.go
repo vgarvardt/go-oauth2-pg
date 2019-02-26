@@ -147,7 +147,7 @@ func (s *TokenStore) Create(info oauth2.TokenInfo) error {
 // RemoveByCode deletes the authorization code
 func (s *TokenStore) RemoveByCode(code string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName), code)
-	if err == ErrNoRows {
+	if err == pgadapter.ErrNoRows {
 		return nil
 	}
 	return err
@@ -156,7 +156,7 @@ func (s *TokenStore) RemoveByCode(code string) error {
 // RemoveByAccess uses the access token to delete the token information
 func (s *TokenStore) RemoveByAccess(access string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName), access)
-	if err == ErrNoRows {
+	if err == pgadapter.ErrNoRows {
 		return nil
 	}
 	return err
@@ -165,7 +165,7 @@ func (s *TokenStore) RemoveByAccess(access string) error {
 // RemoveByRefresh uses the refresh token to delete the token information
 func (s *TokenStore) RemoveByRefresh(refresh string) error {
 	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName), refresh)
-	if err == ErrNoRows {
+	if err == pgadapter.ErrNoRows {
 		return nil
 	}
 	return err
