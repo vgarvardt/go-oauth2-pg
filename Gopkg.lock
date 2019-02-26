@@ -10,7 +10,7 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:6a5edb6e9ad91f22d33e01739bbabea324fed674c40bc4f7d60adb48235e8b48"
+  digest = "1:2b48b4b9c32eafe68ceb15ced4d7419014e8f011be7a5489d400fdf844217d16"
   name = "github.com/jackc/pgx"
   packages = [
     ".",
@@ -19,6 +19,7 @@
     "pgio",
     "pgproto3",
     "pgtype",
+    "stdlib",
   ]
   pruneopts = "UT"
   revision = "c59c9cac59ab95eceb0c12ff338923c62f411ea2"
@@ -87,6 +88,18 @@
   version = "v1.3.0"
 
 [[projects]]
+  digest = "1:43810b43c8886877983b8482abfae98db27431d97608570b517291dfb2268b40"
+  name = "github.com/vgarvardt/go-pg-adapter"
+  packages = [
+    ".",
+    "pgxadapter",
+    "sqladapter",
+  ]
+  pruneopts = "UT"
+  revision = "8c23d5fcc0f15fee8927c7e0820c4813eab3a3ab"
+  version = "v0.1.1"
+
+[[projects]]
   digest = "1:229a51f5f5173174d2883b06dd9ca48e766113fe54cd8b0ae5a78b45038c8e06"
   name = "github.com/vgarvardt/pgx-helpers"
   packages = ["."]
@@ -110,11 +123,14 @@
   analyzer-version = 1
   input-imports = [
     "github.com/jackc/pgx",
+    "github.com/jackc/pgx/stdlib",
     "github.com/jmoiron/sqlx",
     "github.com/json-iterator/go",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
-    "github.com/vgarvardt/pgx-helpers",
+    "github.com/vgarvardt/go-pg-adapter",
+    "github.com/vgarvardt/go-pg-adapter/pgxadapter",
+    "github.com/vgarvardt/go-pg-adapter/sqladapter",
     "gopkg.in/oauth2.v3",
     "gopkg.in/oauth2.v3/models",
   ]

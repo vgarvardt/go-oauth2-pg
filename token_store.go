@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/json-iterator/go"
+	"github.com/vgarvardt/go-pg-adapter"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 )
 
 // TokenStore PostgreSQL token store
 type TokenStore struct {
-	adapter   Adapter
+	adapter   pgadapter.Adapter
 	tableName string
 	logger    Logger
 
@@ -36,7 +37,7 @@ type TokenStoreItem struct {
 }
 
 // NewTokenStore creates PostgreSQL store instance
-func NewTokenStore(adapter Adapter, options ...TokenStoreOption) (*TokenStore, error) {
+func NewTokenStore(adapter pgadapter.Adapter, options ...TokenStoreOption) (*TokenStore, error) {
 	store := &TokenStore{
 		adapter:    adapter,
 		tableName:  "oauth2_tokens",

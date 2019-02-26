@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/json-iterator/go"
+	"github.com/vgarvardt/go-pg-adapter"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 )
 
 // ClientStore PostgreSQL client store
 type ClientStore struct {
-	adapter   Adapter
+	adapter   pgadapter.Adapter
 	tableName string
 	logger    Logger
 
@@ -28,7 +29,7 @@ type ClientStoreItem struct {
 }
 
 // NewClientStore creates PostgreSQL store instance
-func NewClientStore(adapter Adapter, options ...ClientStoreOption) (*ClientStore, error) {
+func NewClientStore(adapter pgadapter.Adapter, options ...ClientStoreOption) (*ClientStore, error) {
 	store := &ClientStore{
 		adapter:   adapter,
 		tableName: "oauth2_clients",
