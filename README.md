@@ -10,12 +10,7 @@ $ go get -u -v github.com/vgarvardt/go-oauth2-pg
 
 ## PostgreSQL drivers
 
-The store accepts an adapter interface that interacts with the DB. The package is bundled with the following adapter implementations
-
-- `database/sql` (e.g. [`github.com/lib/pq`](https://github.com/lib/pq)) - `github.com/vgarvardt/go-oauth2-pg/sql_adapter.New()`
-- [`github.com/jmoiron/sqlx.DB`](https://github.com/jmoiron/sqlx) - `github.com/vgarvardt/go-oauth2-pg/sql_adapter.NewX()`
-- [`github.com/jackc/pgx.Conn`](https://github.com/jackc/pgx) - `github.com/vgarvardt/go-oauth2-pg/pgx_adapter.NewConn()`
-- [`github.com/jackc/pgx.ConnPool`](https://github.com/jackc/pgx) - `github.com/vgarvardt/go-oauth2-pg/pgx_adapter.NewConnPool()`
+The store accepts an adapter interface that interacts with the DB. Adapter and implementations are extracted to separate package [`github.com/vgarvardt/go-pg-adapter`](https://github.com/vgarvardt/go-pg-adapter) for easier maintenance.
 
 ## Usage example
 
@@ -28,7 +23,7 @@ import (
 
 	"github.com/jackc/pgx"
 	pg "github.com/vgarvardt/go-oauth2-pg"
-	pgxAdapter "github.com/vgarvardt/go-oauth2-pg/pgx_adapter"
+	"github.com/vgarvardt/go-pg-adapter/pgxadapter"
 	"gopkg.in/oauth2.v3/manage"
 )
 
@@ -39,7 +34,7 @@ func main() {
 	manager := manage.NewDefaultManager()
 
 	// use PostgreSQL token store with pgx.Connection adapter
-	adapter := pgxAdapter.NewConn(pgxConn)
+	adapter := pgxadapter.NewConn(pgxConn)
 	tokenStore, _ := pg.NewTokenStore(adapter, pg.WithTokenStoreGCInterval(time.Minute))
 	defer tokenStore.Close()
 	
