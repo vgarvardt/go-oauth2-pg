@@ -1,6 +1,7 @@
 package pg
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -12,11 +13,13 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/vgarvardt/go-pg-adapter"
-	"github.com/vgarvardt/go-pg-adapter/pgxadapter"
-	"github.com/vgarvardt/go-pg-adapter/sqladapter"
 	"gopkg.in/oauth2.v3/models"
+
+	"github.com/vgarvardt/go-pg-adapter"
+	"github.com/vgarvardt/go-pg-adapter/pgx3adapter"
+	"github.com/vgarvardt/go-pg-adapter/sqladapter"
 )
 
 var uri string
@@ -55,41 +58,28 @@ func (l *memoryLogger) Log(level pgx.LogLevel, msg string, data map[string]inter
 	}{level: level, msg: msg, data: data})
 }
 
-type queryCall struct {
-	query string
-	args  []interface{}
-}
-
 type mockAdapter struct {
-	execCalls      []queryCall
-	selectOneCalls []queryCall
-
-	execCallback   func(query string, args ...interface{}) error
-	selectCallback func(dst interface{}, query string, args ...interface{}) error
+	mock.Mock
 }
 
-func (a *mockAdapter) Exec(query string, args ...interface{}) error {
-	a.execCalls = append(a.execCalls, queryCall{query: query, args: args})
-
-	if a.execCallback != nil {
-		return a.execCallback(query, args...)
-	}
-
-	return nil
+func (m *mockAdapter) Exec(ctx context.Context, query string, args ...interface{}) error {
+	mArgs := m.Called(ctx, query, args)
+	return mArgs.Error(0)
 }
 
-func (a *mockAdapter) SelectOne(dst interface{}, query string, args ...interface{}) error {
-	a.selectOneCalls = append(a.selectOneCalls, queryCall{query: query, args: args})
-
-	if a.selectCallback != nil {
-		return a.selectCallback(dst, query, args...)
-	}
-
-	return nil
+func (m *mockAdapter) SelectOne(ctx context.Context, dst interface{}, query string, args ...interface{}) error {
+	mArgs := m.Called(ctx, dst, query, args)
+	return mArgs.Error(0)
 }
 
 func TestTokenStore_initTable(t *testing.T) {
 	adapter := new(mockAdapter)
+
+	adapter.On("Exec", mock.Anything, mock.Anything, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		query := args.Get(1).(string)
+		// new line character is the character at position 0
+		assert.Equal(t, 1, strings.Index(query, "CREATE TABLE IF NOT EXISTS"))
+	})
 
 	store, err := NewTokenStore(adapter, WithTokenStoreGCDisabled())
 	require.NoError(t, err)
@@ -97,16 +87,16 @@ func TestTokenStore_initTable(t *testing.T) {
 	defer func() {
 		assert.NoError(t, store.Close())
 	}()
-
-	assert.Equal(t, 1, len(adapter.execCalls))
-	assert.Equal(t, 0, len(adapter.selectOneCalls))
-
-	// new line character is the character at position 0
-	assert.Equal(t, 1, strings.Index(adapter.execCalls[0].query, "CREATE TABLE IF NOT EXISTS"))
 }
 
 func TestTokenStore_gc(t *testing.T) {
 	adapter := new(mockAdapter)
+
+	adapter.On("Exec", mock.Anything, mock.Anything, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		query := args.Get(1).(string)
+		// new line character is the character at position 0
+		assert.Equal(t, 0, strings.Index(query, "DELETE FROM"))
+	})
 
 	store, err := NewTokenStore(adapter, WithTokenStoreInitTableDisabled(), WithTokenStoreGCInterval(time.Second))
 	require.NoError(t, err)
@@ -118,13 +108,7 @@ func TestTokenStore_gc(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	// in 5 seconds we should have 4-5 gc calls
-	assert.True(t, 3 < len(adapter.execCalls))
-	assert.True(t, 5 >= len(adapter.execCalls))
-	assert.Equal(t, 0, len(adapter.selectOneCalls))
-
-	for i := range adapter.execCalls {
-		assert.Equal(t, 0, strings.Index(adapter.execCalls[i].query, "DELETE FROM"))
-	}
+	adapter.AssertNumberOfCalls(t, "Exec", 4)
 }
 
 func generateTokenTableName() string {
@@ -150,7 +134,7 @@ func TestPGXConn(t *testing.T) {
 		assert.NoError(t, pgxConn.Close())
 	}()
 
-	adapter := pgxadapter.NewConn(pgxConn)
+	adapter := pgx3adapter.NewConn(pgxConn)
 
 	tokenStore, err := NewTokenStore(
 		adapter,
@@ -189,7 +173,7 @@ func TestPGXConnPool(t *testing.T) {
 
 	defer pgXConnPool.Close()
 
-	adapter := pgxadapter.NewConnPool(pgXConnPool)
+	adapter := pgx3adapter.NewConnPool(pgXConnPool)
 
 	tokenStore, err := NewTokenStore(
 		adapter,
