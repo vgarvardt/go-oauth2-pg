@@ -95,7 +95,10 @@ func TestTokenStore_initTable(t *testing.T) {
 func TestTokenStore_gc(t *testing.T) {
 	adapter := new(mockAdapter)
 
+	var execCalls int
 	adapter.On("Exec", mock.Anything, mock.Anything, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		execCalls++
+
 		query := args.Get(1).(string)
 		// new line character is the character at position 0
 		assert.Equal(t, 0, strings.Index(query, "DELETE FROM"))
@@ -111,7 +114,8 @@ func TestTokenStore_gc(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	// in 5 seconds we should have 4-5 gc calls
-	adapter.AssertNumberOfCalls(t, "Exec", 4)
+	assert.True(t, 3 < execCalls)
+	assert.True(t, 5 >= execCalls)
 }
 
 func generateTokenTableName() string {

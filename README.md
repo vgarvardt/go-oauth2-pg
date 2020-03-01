@@ -18,23 +18,23 @@ The store accepts an adapter interface that interacts with the DB. Adapter and i
 package main
 
 import (
+	"context"
 	"os"
 	"time"
 
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 	pg "github.com/vgarvardt/go-oauth2-pg"
-	"github.com/vgarvardt/go-pg-adapter/pgxadapter"
+	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
 	"gopkg.in/oauth2.v3/manage"
 )
 
 func main() {
-	pgxConnConfig, _ := pgx.ParseURI(os.Getenv("DB_URI"))
-	pgxConn, _ := pgx.Connect(pgxConnConfig)
+	pgxConn, _ := pgx.Connect(context.TODO(), os.Getenv("DB_URI"))
 
 	manager := manage.NewDefaultManager()
 
 	// use PostgreSQL token store with pgx.Connection adapter
-	adapter := pgxadapter.NewConn(pgxConn)
+	adapter := pgx4adapter.NewConn(pgxConn)
 	tokenStore, _ := pg.NewTokenStore(adapter, pg.WithTokenStoreGCInterval(time.Minute))
 	defer tokenStore.Close()
 	
