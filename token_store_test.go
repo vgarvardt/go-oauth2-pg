@@ -1,6 +1,7 @@
 package pg
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -8,15 +9,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx"
-	_ "github.com/jackc/pgx/stdlib"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/vgarvardt/go-pg-adapter"
-	"github.com/vgarvardt/go-pg-adapter/pgxadapter"
-	"github.com/vgarvardt/go-pg-adapter/sqladapter"
 	"gopkg.in/oauth2.v3/models"
+
+	"github.com/vgarvardt/go-pg-adapter"
+	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
+	"github.com/vgarvardt/go-pg-adapter/sqladapter"
 )
 
 var uri string
@@ -36,6 +40,7 @@ type memoryLogger struct {
 	args    [][]interface{}
 
 	pgxLogs []struct {
+		ctx   context.Context
 		level pgx.LogLevel
 		msg   string
 		data  map[string]interface{}
@@ -47,49 +52,37 @@ func (l *memoryLogger) Printf(format string, v ...interface{}) {
 	l.args = append(l.args, v)
 }
 
-func (l *memoryLogger) Log(level pgx.LogLevel, msg string, data map[string]interface{}) {
+func (l *memoryLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
 	l.pgxLogs = append(l.pgxLogs, struct {
+		ctx   context.Context
 		level pgx.LogLevel
 		msg   string
 		data  map[string]interface{}
-	}{level: level, msg: msg, data: data})
-}
-
-type queryCall struct {
-	query string
-	args  []interface{}
+	}{ctx: ctx, level: level, msg: msg, data: data})
 }
 
 type mockAdapter struct {
-	execCalls      []queryCall
-	selectOneCalls []queryCall
-
-	execCallback   func(query string, args ...interface{}) error
-	selectCallback func(dst interface{}, query string, args ...interface{}) error
+	mock.Mock
 }
 
-func (a *mockAdapter) Exec(query string, args ...interface{}) error {
-	a.execCalls = append(a.execCalls, queryCall{query: query, args: args})
-
-	if a.execCallback != nil {
-		return a.execCallback(query, args...)
-	}
-
-	return nil
+func (m *mockAdapter) Exec(ctx context.Context, query string, args ...interface{}) error {
+	mArgs := m.Called(ctx, query, args)
+	return mArgs.Error(0)
 }
 
-func (a *mockAdapter) SelectOne(dst interface{}, query string, args ...interface{}) error {
-	a.selectOneCalls = append(a.selectOneCalls, queryCall{query: query, args: args})
-
-	if a.selectCallback != nil {
-		return a.selectCallback(dst, query, args...)
-	}
-
-	return nil
+func (m *mockAdapter) SelectOne(ctx context.Context, dst interface{}, query string, args ...interface{}) error {
+	mArgs := m.Called(ctx, dst, query, args)
+	return mArgs.Error(0)
 }
 
 func TestTokenStore_initTable(t *testing.T) {
 	adapter := new(mockAdapter)
+
+	adapter.On("Exec", mock.Anything, mock.Anything, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		query := args.Get(1).(string)
+		// new line character is the character at position 0
+		assert.Equal(t, 1, strings.Index(query, "CREATE TABLE IF NOT EXISTS"))
+	})
 
 	store, err := NewTokenStore(adapter, WithTokenStoreGCDisabled())
 	require.NoError(t, err)
@@ -97,16 +90,19 @@ func TestTokenStore_initTable(t *testing.T) {
 	defer func() {
 		assert.NoError(t, store.Close())
 	}()
-
-	assert.Equal(t, 1, len(adapter.execCalls))
-	assert.Equal(t, 0, len(adapter.selectOneCalls))
-
-	// new line character is the character at position 0
-	assert.Equal(t, 1, strings.Index(adapter.execCalls[0].query, "CREATE TABLE IF NOT EXISTS"))
 }
 
 func TestTokenStore_gc(t *testing.T) {
 	adapter := new(mockAdapter)
+
+	var execCalls int
+	adapter.On("Exec", mock.Anything, mock.Anything, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		execCalls++
+
+		query := args.Get(1).(string)
+		// new line character is the character at position 0
+		assert.Equal(t, 0, strings.Index(query, "DELETE FROM"))
+	})
 
 	store, err := NewTokenStore(adapter, WithTokenStoreInitTableDisabled(), WithTokenStoreGCInterval(time.Second))
 	require.NoError(t, err)
@@ -118,13 +114,8 @@ func TestTokenStore_gc(t *testing.T) {
 	time.Sleep(5 * time.Second)
 
 	// in 5 seconds we should have 4-5 gc calls
-	assert.True(t, 3 < len(adapter.execCalls))
-	assert.True(t, 5 >= len(adapter.execCalls))
-	assert.Equal(t, 0, len(adapter.selectOneCalls))
-
-	for i := range adapter.execCalls {
-		assert.Equal(t, 0, strings.Index(adapter.execCalls[i].query, "DELETE FROM"))
-	}
+	assert.True(t, 3 < execCalls)
+	assert.True(t, 5 >= execCalls)
 }
 
 func generateTokenTableName() string {
@@ -138,19 +129,19 @@ func generateClientTableName() string {
 func TestPGXConn(t *testing.T) {
 	l := new(memoryLogger)
 
-	pgxConnConfig, err := pgx.ParseURI(uri)
+	pgxConnConfig, err := pgx.ParseConfig(uri)
 	require.NoError(t, err)
 
 	pgxConnConfig.Logger = l
 
-	pgxConn, err := pgx.Connect(pgxConnConfig)
+	pgxConn, err := pgx.ConnectConfig(context.Background(), pgxConnConfig)
 	require.NoError(t, err)
 
 	defer func() {
-		assert.NoError(t, pgxConn.Close())
+		assert.NoError(t, pgxConn.Close(context.Background()))
 	}()
 
-	adapter := pgxadapter.NewConn(pgxConn)
+	adapter := pgx4adapter.NewConn(pgxConn)
 
 	tokenStore, err := NewTokenStore(
 		adapter,
@@ -177,19 +168,17 @@ func TestPGXConn(t *testing.T) {
 func TestPGXConnPool(t *testing.T) {
 	l := new(memoryLogger)
 
-	pgxConnConfig, err := pgx.ParseURI(uri)
+	pgxPoolConnConfig, err := pgxpool.ParseConfig(uri)
 	require.NoError(t, err)
 
-	pgxConnConfig.Logger = l
+	pgxPoolConnConfig.ConnConfig.Logger = l
 
-	pgxPoolConfig := pgx.ConnPoolConfig{ConnConfig: pgxConnConfig}
-
-	pgXConnPool, err := pgx.NewConnPool(pgxPoolConfig)
+	pgXConnPool, err := pgxpool.ConnectConfig(context.Background(), pgxPoolConnConfig)
 	require.NoError(t, err)
 
 	defer pgXConnPool.Close()
 
-	adapter := pgxadapter.NewConnPool(pgXConnPool)
+	adapter := pgx4adapter.NewPool(pgXConnPool)
 
 	tokenStore, err := NewTokenStore(
 		adapter,

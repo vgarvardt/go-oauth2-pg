@@ -1,15 +1,17 @@
 package pg
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/json-iterator/go"
-	"github.com/vgarvardt/go-pg-adapter"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
+
+	"github.com/vgarvardt/go-pg-adapter"
 )
 
 // TokenStore PostgreSQL token store
@@ -81,7 +83,7 @@ func (s *TokenStore) gc() {
 }
 
 func (s *TokenStore) initTable() error {
-	return s.adapter.Exec(fmt.Sprintf(`
+	return s.adapter.Exec(context.Background(), fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %[1]s (
   id         BIGSERIAL   NOT NULL,
   created_at TIMESTAMPTZ NOT NULL,
@@ -102,7 +104,7 @@ CREATE INDEX IF NOT EXISTS idx_%[1]s_refresh ON %[1]s (refresh);
 
 func (s *TokenStore) clean() {
 	now := time.Now()
-	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE expires_at <= $1", s.tableName), now)
+	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE expires_at <= $1", s.tableName), now)
 	if err != nil {
 		s.logger.Printf("Error while cleaning out outdated entities: %+v", err)
 	}
@@ -134,6 +136,7 @@ func (s *TokenStore) Create(info oauth2.TokenInfo) error {
 	}
 
 	return s.adapter.Exec(
+		context.Background(),
 		fmt.Sprintf("INSERT INTO %s (created_at, expires_at, code, access, refresh, data) VALUES ($1, $2, $3, $4, $5, $6)", s.tableName),
 		item.CreatedAt,
 		item.ExpiresAt,
@@ -146,7 +149,7 @@ func (s *TokenStore) Create(info oauth2.TokenInfo) error {
 
 // RemoveByCode deletes the authorization code
 func (s *TokenStore) RemoveByCode(code string) error {
-	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName), code)
+	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName), code)
 	if err == pgadapter.ErrNoRows {
 		return nil
 	}
@@ -155,7 +158,7 @@ func (s *TokenStore) RemoveByCode(code string) error {
 
 // RemoveByAccess uses the access token to delete the token information
 func (s *TokenStore) RemoveByAccess(access string) error {
-	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName), access)
+	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName), access)
 	if err == pgadapter.ErrNoRows {
 		return nil
 	}
@@ -164,7 +167,7 @@ func (s *TokenStore) RemoveByAccess(access string) error {
 
 // RemoveByRefresh uses the refresh token to delete the token information
 func (s *TokenStore) RemoveByRefresh(refresh string) error {
-	err := s.adapter.Exec(fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName), refresh)
+	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName), refresh)
 	if err == pgadapter.ErrNoRows {
 		return nil
 	}
@@ -184,7 +187,7 @@ func (s *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 	}
 
 	var item TokenStoreItem
-	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE code = $1", s.tableName), code); err != nil {
+	if err := s.adapter.SelectOne(context.Background(), &item, fmt.Sprintf("SELECT * FROM %s WHERE code = $1", s.tableName), code); err != nil {
 		return nil, err
 	}
 
@@ -198,7 +201,7 @@ func (s *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, error) {
 	}
 
 	var item TokenStoreItem
-	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE access = $1", s.tableName), access); err != nil {
+	if err := s.adapter.SelectOne(context.Background(), &item, fmt.Sprintf("SELECT * FROM %s WHERE access = $1", s.tableName), access); err != nil {
 		return nil, err
 	}
 
@@ -212,7 +215,7 @@ func (s *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, error) {
 	}
 
 	var item TokenStoreItem
-	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE refresh = $1", s.tableName), refresh); err != nil {
+	if err := s.adapter.SelectOne(context.Background(), &item, fmt.Sprintf("SELECT * FROM %s WHERE refresh = $1", s.tableName), refresh); err != nil {
 		return nil, err
 	}
 

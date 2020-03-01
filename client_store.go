@@ -1,14 +1,16 @@
 package pg
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/json-iterator/go"
-	"github.com/vgarvardt/go-pg-adapter"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
+
+	"github.com/vgarvardt/go-pg-adapter"
 )
 
 // ClientStore PostgreSQL client store
@@ -53,7 +55,7 @@ func NewClientStore(adapter pgadapter.Adapter, options ...ClientStoreOption) (*C
 }
 
 func (s *ClientStore) initTable() error {
-	return s.adapter.Exec(fmt.Sprintf(`
+	return s.adapter.Exec(context.Background(), fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %[1]s (
   id     TEXT  NOT NULL,
   secret TEXT  NOT NULL,
@@ -77,7 +79,7 @@ func (s *ClientStore) GetByID(id string) (oauth2.ClientInfo, error) {
 	}
 
 	var item ClientStoreItem
-	if err := s.adapter.SelectOne(&item, fmt.Sprintf("SELECT * FROM %s WHERE id = $1", s.tableName), id); err != nil {
+	if err := s.adapter.SelectOne(context.Background(), &item, fmt.Sprintf("SELECT * FROM %s WHERE id = $1", s.tableName), id); err != nil {
 		return nil, err
 	}
 
@@ -92,6 +94,7 @@ func (s *ClientStore) Create(info oauth2.ClientInfo) error {
 	}
 
 	return s.adapter.Exec(
+		context.Background(),
 		fmt.Sprintf("INSERT INTO %s (id, secret, domain, data) VALUES ($1, $2, $3, $4)", s.tableName),
 		info.GetID(),
 		info.GetSecret(),
