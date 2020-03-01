@@ -9,8 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jackc/pgx"
-	_ "github.com/jackc/pgx/stdlib"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -18,7 +19,7 @@ import (
 	"gopkg.in/oauth2.v3/models"
 
 	"github.com/vgarvardt/go-pg-adapter"
-	"github.com/vgarvardt/go-pg-adapter/pgx3adapter"
+	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
 	"github.com/vgarvardt/go-pg-adapter/sqladapter"
 )
 
@@ -39,6 +40,7 @@ type memoryLogger struct {
 	args    [][]interface{}
 
 	pgxLogs []struct {
+		ctx   context.Context
 		level pgx.LogLevel
 		msg   string
 		data  map[string]interface{}
@@ -50,12 +52,13 @@ func (l *memoryLogger) Printf(format string, v ...interface{}) {
 	l.args = append(l.args, v)
 }
 
-func (l *memoryLogger) Log(level pgx.LogLevel, msg string, data map[string]interface{}) {
+func (l *memoryLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
 	l.pgxLogs = append(l.pgxLogs, struct {
+		ctx   context.Context
 		level pgx.LogLevel
 		msg   string
 		data  map[string]interface{}
-	}{level: level, msg: msg, data: data})
+	}{ctx: ctx, level: level, msg: msg, data: data})
 }
 
 type mockAdapter struct {
@@ -122,19 +125,19 @@ func generateClientTableName() string {
 func TestPGXConn(t *testing.T) {
 	l := new(memoryLogger)
 
-	pgxConnConfig, err := pgx.ParseURI(uri)
+	pgxConnConfig, err := pgx.ParseConfig(uri)
 	require.NoError(t, err)
 
 	pgxConnConfig.Logger = l
 
-	pgxConn, err := pgx.Connect(pgxConnConfig)
+	pgxConn, err := pgx.ConnectConfig(context.Background(), pgxConnConfig)
 	require.NoError(t, err)
 
 	defer func() {
-		assert.NoError(t, pgxConn.Close())
+		assert.NoError(t, pgxConn.Close(context.Background()))
 	}()
 
-	adapter := pgx3adapter.NewConn(pgxConn)
+	adapter := pgx4adapter.NewConn(pgxConn)
 
 	tokenStore, err := NewTokenStore(
 		adapter,
@@ -161,19 +164,17 @@ func TestPGXConn(t *testing.T) {
 func TestPGXConnPool(t *testing.T) {
 	l := new(memoryLogger)
 
-	pgxConnConfig, err := pgx.ParseURI(uri)
+	pgxPoolConnConfig, err := pgxpool.ParseConfig(uri)
 	require.NoError(t, err)
 
-	pgxConnConfig.Logger = l
+	pgxPoolConnConfig.ConnConfig.Logger = l
 
-	pgxPoolConfig := pgx.ConnPoolConfig{ConnConfig: pgxConnConfig}
-
-	pgXConnPool, err := pgx.NewConnPool(pgxPoolConfig)
+	pgXConnPool, err := pgxpool.ConnectConfig(context.Background(), pgxPoolConnConfig)
 	require.NoError(t, err)
 
 	defer pgXConnPool.Close()
 
-	adapter := pgx3adapter.NewConnPool(pgXConnPool)
+	adapter := pgx4adapter.NewPool(pgXConnPool)
 
 	tokenStore, err := NewTokenStore(
 		adapter,
