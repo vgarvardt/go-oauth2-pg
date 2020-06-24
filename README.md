@@ -18,7 +18,8 @@ $ go get -u github.com/vgarvardt/go-oauth2-pg/v3
 
 ## PostgreSQL drivers
 
-The store accepts an adapter interface that interacts with the DB. Adapter and implementations are extracted to separate package [`github.com/vgarvardt/go-pg-adapter`](https://github.com/vgarvardt/go-pg-adapter) for easier maintenance.
+The store accepts an adapter interface that interacts with the DB.
+Adapter and implementations extracted to separate package [`github.com/vgarvardt/go-pg-adapter`](https://github.com/vgarvardt/go-pg-adapter) for easier maintenance.
 
 ## Usage example
 
