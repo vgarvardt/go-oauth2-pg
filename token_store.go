@@ -2,21 +2,21 @@ package pg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
-	"github.com/json-iterator/go"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 
-	"github.com/vgarvardt/go-pg-adapter"
+	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 )
 
 // TokenStore PostgreSQL token store
 type TokenStore struct {
-	adapter   pgadapter.Adapter
+	adapter   pgAdapter.Adapter
 	tableName string
 	logger    Logger
 
@@ -39,7 +39,7 @@ type TokenStoreItem struct {
 }
 
 // NewTokenStore creates PostgreSQL store instance
-func NewTokenStore(adapter pgadapter.Adapter, options ...TokenStoreOption) (*TokenStore, error) {
+func NewTokenStore(adapter pgAdapter.Adapter, options ...TokenStoreOption) (*TokenStore, error) {
 	store := &TokenStore{
 		adapter:    adapter,
 		tableName:  "oauth2_tokens",
@@ -112,7 +112,7 @@ func (s *TokenStore) clean() {
 
 // Create creates and stores the new token information
 func (s *TokenStore) Create(info oauth2.TokenInfo) error {
-	buf, err := jsoniter.Marshal(info)
+	buf, err := json.Marshal(info)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (s *TokenStore) Create(info oauth2.TokenInfo) error {
 // RemoveByCode deletes the authorization code
 func (s *TokenStore) RemoveByCode(code string) error {
 	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE code = $1", s.tableName), code)
-	if err == pgadapter.ErrNoRows {
+	if err == pgAdapter.ErrNoRows {
 		return nil
 	}
 	return err
@@ -159,7 +159,7 @@ func (s *TokenStore) RemoveByCode(code string) error {
 // RemoveByAccess uses the access token to delete the token information
 func (s *TokenStore) RemoveByAccess(access string) error {
 	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE access = $1", s.tableName), access)
-	if err == pgadapter.ErrNoRows {
+	if err == pgAdapter.ErrNoRows {
 		return nil
 	}
 	return err
@@ -168,7 +168,7 @@ func (s *TokenStore) RemoveByAccess(access string) error {
 // RemoveByRefresh uses the refresh token to delete the token information
 func (s *TokenStore) RemoveByRefresh(refresh string) error {
 	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE refresh = $1", s.tableName), refresh)
-	if err == pgadapter.ErrNoRows {
+	if err == pgAdapter.ErrNoRows {
 		return nil
 	}
 	return err
@@ -176,7 +176,7 @@ func (s *TokenStore) RemoveByRefresh(refresh string) error {
 
 func (s *TokenStore) toTokenInfo(data []byte) (oauth2.TokenInfo, error) {
 	var tm models.Token
-	err := jsoniter.Unmarshal(data, &tm)
+	err := json.Unmarshal(data, &tm)
 	return &tm, err
 }
 
