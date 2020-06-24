@@ -1,4 +1,4 @@
-module github.com/vgarvardt/go-oauth2-pg
+module github.com/vgarvardt/go-oauth2-pg/v3
 
 go 1.14
 
