@@ -10,15 +10,18 @@
 Storage major version matches [OAuth 2.0](https://github.com/go-oauth2/oauth2) major version,
 so use corresponding version (go modules compliant) 
 
-For `gopkg.in/oauth2.v3`:
+For `gopkg.in/oauth2.v4`:
 
 ```bash
-$ go get -u github.com/vgarvardt/go-oauth2-pg/v3
+$ go get -u github.com/vgarvardt/go-oauth2-pg/v4
 ```
+
+For `gopkg.in/oauth2.v3` see [v3 branch](https://github.com/vgarvardt/go-oauth2-pg/tree/v3).
 
 ## PostgreSQL drivers
 
-The store accepts an adapter interface that interacts with the DB. Adapter and implementations are extracted to separate package [`github.com/vgarvardt/go-pg-adapter`](https://github.com/vgarvardt/go-pg-adapter) for easier maintenance.
+The store accepts an adapter interface that interacts with the DB.
+Adapter and implementations extracted to separate package [`github.com/vgarvardt/go-pg-adapter`](https://github.com/vgarvardt/go-pg-adapter) for easier maintenance.
 
 ## Usage example
 
@@ -31,9 +34,9 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
-	pg "github.com/vgarvardt/go-oauth2-pg/v3"
+	pg "github.com/vgarvardt/go-oauth2-pg/v4"
 	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
-	"gopkg.in/oauth2.v3/manage"
+	"gopkg.in/oauth2.v4/manage"
 )
 
 func main() {
@@ -53,8 +56,6 @@ func main() {
 	// ...
 }
 ```
-
-## How to run tests
 
 ## Testing
 

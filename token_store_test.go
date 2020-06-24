@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/oauth2.v3/models"
+	"gopkg.in/oauth2.v4/models"
 
 	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
@@ -283,58 +283,61 @@ func runTokenStoreTest(t *testing.T, store *TokenStore, l *memoryLogger) {
 
 func runTokenStoreCodeTest(t *testing.T, store *TokenStore) {
 	code := fmt.Sprintf("code %s", time.Now().String())
+	ctx := context.Background()
 
 	tokenCode := models.NewToken()
 	tokenCode.SetCode(code)
 	tokenCode.SetCodeCreateAt(time.Now())
 	tokenCode.SetCodeExpiresIn(time.Minute)
-	require.NoError(t, store.Create(tokenCode))
+	require.NoError(t, store.Create(ctx, tokenCode))
 
-	token, err := store.GetByCode(code)
+	token, err := store.GetByCode(ctx, code)
 	require.NoError(t, err)
 	assert.Equal(t, code, token.GetCode())
 
-	require.NoError(t, store.RemoveByCode(code))
+	require.NoError(t, store.RemoveByCode(ctx, code))
 
-	_, err = store.GetByCode(code)
+	_, err = store.GetByCode(ctx, code)
 	assert.Equal(t, pgAdapter.ErrNoRows, err)
 }
 
 func runTokenStoreAccessTest(t *testing.T, store *TokenStore) {
 	code := fmt.Sprintf("access %s", time.Now().String())
+	ctx := context.Background()
 
 	tokenCode := models.NewToken()
 	tokenCode.SetAccess(code)
 	tokenCode.SetAccessCreateAt(time.Now())
 	tokenCode.SetAccessExpiresIn(time.Minute)
-	require.NoError(t, store.Create(tokenCode))
+	require.NoError(t, store.Create(ctx, tokenCode))
 
-	token, err := store.GetByAccess(code)
+	token, err := store.GetByAccess(ctx, code)
 	require.NoError(t, err)
 	assert.Equal(t, code, token.GetAccess())
 
-	require.NoError(t, store.RemoveByAccess(code))
+	require.NoError(t, store.RemoveByAccess(ctx, code))
 
-	_, err = store.GetByAccess(code)
+	_, err = store.GetByAccess(ctx, code)
 	assert.Equal(t, pgAdapter.ErrNoRows, err)
 }
 
 func runTokenStoreRefreshTest(t *testing.T, store *TokenStore) {
 	code := fmt.Sprintf("refresh %s", time.Now().String())
+	ctx := context.Background()
 
 	tokenCode := models.NewToken()
 	tokenCode.SetRefresh(code)
 	tokenCode.SetRefreshCreateAt(time.Now())
 	tokenCode.SetRefreshExpiresIn(time.Minute)
-	require.NoError(t, store.Create(tokenCode))
+	require.NoError(t, store.Create(ctx, tokenCode))
 
-	token, err := store.GetByRefresh(code)
+	token, err := store.GetByRefresh(ctx, code)
 	require.NoError(t, err)
 	assert.Equal(t, code, token.GetRefresh())
 
-	require.NoError(t, store.RemoveByRefresh(code))
+	require.NoError(t, store.RemoveByRefresh(ctx, code))
 
-	_, err = store.GetByRefresh(code)
+	_, err = store.GetByRefresh(ctx, code)
 	assert.Equal(t, pgAdapter.ErrNoRows, err)
 }
 
@@ -345,10 +348,11 @@ func runClientStoreTest(t *testing.T, store *ClientStore) {
 		Domain: fmt.Sprintf("domain %s", time.Now().String()),
 		UserID: fmt.Sprintf("user id %s", time.Now().String()),
 	}
+	ctx := context.Background()
 
 	require.NoError(t, store.Create(originalClient))
 
-	client, err := store.GetByID(originalClient.GetID())
+	client, err := store.GetByID(ctx, originalClient.GetID())
 	require.NoError(t, err)
 	assert.Equal(t, originalClient.GetID(), client.GetID())
 	assert.Equal(t, originalClient.GetSecret(), client.GetSecret())
