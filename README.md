@@ -1,11 +1,14 @@
 # PostgreSQL Storage for [OAuth 2.0](https://github.com/go-oauth2/oauth2)
 
-[![Build][Build-Status-Image]][Build-Status-Url] [![Codecov][codecov-image]][codecov-url] [![ReportCard][reportcard-image]][reportcard-url] [![GoDoc][godoc-image]][godoc-url] [![License][license-image]][license-url]
+[![GoDoc](https://godoc.org/github.com/vgarvardt/go-oauth2-pg?status.svg)](https://godoc.org/github.com/vgarvardt/go-oauth2-pg)
+[![Coverage Status](https://codecov.io/gh/vgarvardt/go-oauth2-pg/branch/master/graph/badge.svg)](https://codecov.io/gh/vgarvardt/go-oauth2-pg)
+[![ReportCard](https://goreportcard.com/badge/github.com/vgarvardt/go-oauth2-pg)](https://goreportcard.com/report/github.com/vgarvardt/go-oauth2-pg)
+[![License](https://img.shields.io/npm/l/express.svg)](http://opensource.org/licenses/MIT)
 
 ## Install
 
 ```bash
-$ go get -u -v github.com/vgarvardt/go-oauth2-pg
+$ go get -u github.com/vgarvardt/go-oauth2-pg
 ```
 
 ## PostgreSQL drivers
@@ -48,31 +51,19 @@ func main() {
 
 ## How to run tests
 
-You will need running PostgreSQL instance. E.g. the one running in docker and exposing a port to a host system
+## Testing
 
-```bash
-docker run --rm -p 5432:5432 -it -e POSTGRES_PASSWORD=oauth2 -e POSTGRES_USER=oauth2 -e POSTGRES_DB=oauth2 postgres:10
-```
+Linter and tests are running for every Pul Request, but it is possible to run linter
+and tests locally using `docker` and `make`.
 
-Now you can run tests using the running PostgreSQL instance using `PG_URI` environment variable
+Run linter: `make link`. This command runs liner in docker container with the project
+source code mounted.
 
-```bash
-PG_URI=postgres://oauth2:oauth2@localhost:5432/oauth2?sslmode=disable go test -cover ./...
-```
+Run tests: `make test`. This command runs project dependencies in docker containers
+if they are not started yet and runs go tests with coverage.
 
 ## MIT License
 
 ```
-Copyright (c) 2019 Vladimir Garvardt
+Copyright (c) 2020 Vladimir Garvardt
 ```
-
-[Build-Status-Url]: https://travis-ci.org/vgarvardt/go-oauth2-pg
-[Build-Status-Image]: https://travis-ci.org/vgarvardt/go-oauth2-pg.svg?branch=master
-[codecov-url]: https://codecov.io/gh/vgarvardt/go-oauth2-pg
-[codecov-image]: https://codecov.io/gh/vgarvardt/go-oauth2-pg/branch/master/graph/badge.svg
-[reportcard-url]: https://goreportcard.com/report/github.com/vgarvardt/go-oauth2-pg
-[reportcard-image]: https://goreportcard.com/badge/github.com/vgarvardt/go-oauth2-pg
-[godoc-url]: https://godoc.org/github.com/vgarvardt/go-oauth2-pg
-[godoc-image]: https://godoc.org/github.com/vgarvardt/go-oauth2-pg?status.svg
-[license-url]: http://opensource.org/licenses/MIT
-[license-image]: https://img.shields.io/npm/l/express.svg

@@ -1,12 +1,15 @@
 module github.com/vgarvardt/go-oauth2-pg
 
-go 1.12
+go 1.14
 
 require (
-	github.com/jackc/pgx/v4 v4.4.1
+	github.com/jackc/pgconn v1.6.0 // indirect
+	github.com/jackc/pgx/v4 v4.6.0
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/json-iterator/go v1.1.7
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.6.1
 	github.com/vgarvardt/go-pg-adapter v0.4.1
-	gopkg.in/oauth2.v3 v3.10.1
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/text v0.3.3 // indirect
+	gopkg.in/oauth2.v3 v3.12.0
+	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )

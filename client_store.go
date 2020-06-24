@@ -2,20 +2,20 @@ package pg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/json-iterator/go"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 
-	"github.com/vgarvardt/go-pg-adapter"
+	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 )
 
 // ClientStore PostgreSQL client store
 type ClientStore struct {
-	adapter   pgadapter.Adapter
+	adapter   pgAdapter.Adapter
 	tableName string
 	logger    Logger
 
@@ -31,7 +31,7 @@ type ClientStoreItem struct {
 }
 
 // NewClientStore creates PostgreSQL store instance
-func NewClientStore(adapter pgadapter.Adapter, options ...ClientStoreOption) (*ClientStore, error) {
+func NewClientStore(adapter pgAdapter.Adapter, options ...ClientStoreOption) (*ClientStore, error) {
 	store := &ClientStore{
 		adapter:   adapter,
 		tableName: "oauth2_clients",
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS %[1]s (
 
 func (s *ClientStore) toClientInfo(data []byte) (oauth2.ClientInfo, error) {
 	var cm models.Client
-	err := jsoniter.Unmarshal(data, &cm)
+	err := json.Unmarshal(data, &cm)
 	return &cm, err
 }
 
@@ -88,7 +88,7 @@ func (s *ClientStore) GetByID(id string) (oauth2.ClientInfo, error) {
 
 // Create creates and stores the new client information
 func (s *ClientStore) Create(info oauth2.ClientInfo) error {
-	data, err := jsoniter.Marshal(info)
+	data, err := json.Marshal(info)
 	if err != nil {
 		return err
 	}
