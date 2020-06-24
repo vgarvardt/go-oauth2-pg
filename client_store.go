@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"gopkg.in/oauth2.v3"
-	"gopkg.in/oauth2.v3/models"
+	"gopkg.in/oauth2.v4"
+	"gopkg.in/oauth2.v4/models"
 
 	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 )
@@ -73,13 +73,13 @@ func (s *ClientStore) toClientInfo(data []byte) (oauth2.ClientInfo, error) {
 }
 
 // GetByID retrieves and returns client information by id
-func (s *ClientStore) GetByID(id string) (oauth2.ClientInfo, error) {
+func (s *ClientStore) GetByID(ctx context.Context, id string) (oauth2.ClientInfo, error) {
 	if id == "" {
 		return nil, nil
 	}
 
 	var item ClientStoreItem
-	if err := s.adapter.SelectOne(context.Background(), &item, fmt.Sprintf("SELECT * FROM %s WHERE id = $1", s.tableName), id); err != nil {
+	if err := s.adapter.SelectOne(ctx, &item, fmt.Sprintf("SELECT * FROM %s WHERE id = $1", s.tableName), id); err != nil {
 		return nil, err
 	}
 
