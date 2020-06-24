@@ -54,8 +54,6 @@ func main() {
 }
 ```
 
-## How to run tests
-
 ## Testing
 
 Linter and tests are running for every Pul Request, but it is possible to run linter
