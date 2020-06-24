@@ -7,8 +7,13 @@
 
 ## Install
 
+Storage major version matches [OAuth 2.0](https://github.com/go-oauth2/oauth2) major version,
+so use corresponding version (go modules compliant) 
+
+For `gopkg.in/oauth2.v3`:
+
 ```bash
-$ go get -u github.com/vgarvardt/go-oauth2-pg
+$ go get -u github.com/vgarvardt/go-oauth2-pg/v3
 ```
 
 ## PostgreSQL drivers
@@ -26,7 +31,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4"
-	pg "github.com/vgarvardt/go-oauth2-pg"
+	pg "github.com/vgarvardt/go-oauth2-pg/v3"
 	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
 	"gopkg.in/oauth2.v3/manage"
 )
