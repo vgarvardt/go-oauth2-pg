@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"gopkg.in/oauth2.v4"
-	"gopkg.in/oauth2.v4/models"
+	"github.com/go-oauth2/oauth2/v4"
+	"github.com/go-oauth2/oauth2/v4/models"
 
 	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 )

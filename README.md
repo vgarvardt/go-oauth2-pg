@@ -10,7 +10,7 @@
 Storage major version matches [OAuth 2.0](https://github.com/go-oauth2/oauth2) major version,
 so use corresponding version (go modules compliant) 
 
-For `gopkg.in/oauth2.v4`:
+For `github.com/go-oauth2/oauth2/v4`:
 
 ```bash
 $ go get -u github.com/vgarvardt/go-oauth2-pg/v4
@@ -33,10 +33,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-oauth2/oauth2/v4/manage"
 	"github.com/jackc/pgx/v4"
 	pg "github.com/vgarvardt/go-oauth2-pg/v4"
 	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
-	"gopkg.in/oauth2.v4/manage"
 )
 
 func main() {

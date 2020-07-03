@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -16,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/oauth2.v4/models"
 
 	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
