@@ -13,9 +13,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:9.6-alpine
-        ports:
-          - "5432"
+        image: postgres:9.6
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
@@ -35,7 +33,7 @@ jobs:
         if: success()
         run: go test -timeout 60s -cover ./... -coverprofile=coverage.txt -covermode=atomic
         env:
-          PG_URI: "postgres://test:test@localhost:${{ job.services.postgres.ports[5432] }}/test?sslmode=disable"
+          PG_URI: "postgres://test:test@postgres:5432/test?sslmode=disable"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
