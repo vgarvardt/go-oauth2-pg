@@ -68,7 +68,7 @@ func NewTokenStore(adapter pgAdapter.Adapter, options ...TokenStoreOption) (*Tok
 	return store, err
 }
 
-// Close close the store
+// Close closes the store
 func (s *TokenStore) Close() error {
 	if !s.gcDisabled {
 		s.ticker.Stop()
