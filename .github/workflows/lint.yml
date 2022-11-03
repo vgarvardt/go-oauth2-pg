@@ -1,0 +1,45 @@
+name: "PR: Lint"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  push:
+    branches: [ master, v3 ]
+  pull_request:
+    branches: [ master, v3 ]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          # Full git history is needed to get a proper list of changed files within `super-linter`
+          fetch-depth: 0
+
+      - name: Lint Code Base
+        uses: github/super-linter@v4
+        env:
+          VALIDATE_ALL_CODEBASE: ${{ github.event_name != 'pull_request' }}
+          DEFAULT_BRANCH: master
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # go validator works pretty bad in super-linter, we'll use the original one
+          VALIDATE_GO: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: ./go.mod
+
+      - name: Lint Golang
+        uses: golangci/golangci-lint-action@v3
+        with:
+          only-new-issues: ${{ github.event_name == 'pull_request' }}
+          args: >
+            --config=./.github/linters/.golangci.yml
