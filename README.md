@@ -8,12 +8,12 @@
 ## Install
 
 Storage major version matches [OAuth 2.0](https://github.com/go-oauth2/oauth2) major version,
-so use corresponding version (go modules compliant) 
+so use corresponding version (go modules compliant)
 
 For `github.com/go-oauth2/oauth2/v4`:
 
 ```bash
-$ go get -u github.com/vgarvardt/go-oauth2-pg/v4
+go get -u github.com/vgarvardt/go-oauth2-pg/v4
 ```
 
 For `gopkg.in/oauth2.v3` see [v3 branch](https://github.com/vgarvardt/go-oauth2-pg/tree/v3).
@@ -21,7 +21,8 @@ For `gopkg.in/oauth2.v3` see [v3 branch](https://github.com/vgarvardt/go-oauth2-
 ## PostgreSQL drivers
 
 The store accepts an adapter interface that interacts with the DB.
-Adapter and implementations extracted to separate package [`github.com/vgarvardt/go-pg-adapter`](https://github.com/vgarvardt/go-pg-adapter) for easier maintenance.
+Adapter and implementations extracted to separate
+package [`github.com/vgarvardt/go-pg-adapter`](https://github.com/vgarvardt/go-pg-adapter) for easier maintenance.
 
 ## Usage example
 
@@ -29,31 +30,31 @@ Adapter and implementations extracted to separate package [`github.com/vgarvardt
 package main
 
 import (
-	"context"
-	"os"
-	"time"
+  "context"
+  "os"
+  "time"
 
-	"github.com/go-oauth2/oauth2/v4/manage"
-	"github.com/jackc/pgx/v4"
-	pg "github.com/vgarvardt/go-oauth2-pg/v4"
-	"github.com/vgarvardt/go-pg-adapter/pgx4adapter"
+  "github.com/go-oauth2/oauth2/v4/manage"
+  "github.com/jackc/pgx/v4"
+  pg "github.com/vgarvardt/go-oauth2-pg/v4"
+  "github.com/vgarvardt/go-pg-adapter/pgx4adapter"
 )
 
 func main() {
-	pgxConn, _ := pgx.Connect(context.TODO(), os.Getenv("DB_URI"))
+  pgxConn, _ := pgx.Connect(context.TODO(), os.Getenv("DB_URI"))
 
-	manager := manage.NewDefaultManager()
+  manager := manage.NewDefaultManager()
 
-	// use PostgreSQL token store with pgx.Connection adapter
-	adapter := pgx4adapter.NewConn(pgxConn)
-	tokenStore, _ := pg.NewTokenStore(adapter, pg.WithTokenStoreGCInterval(time.Minute))
-	defer tokenStore.Close()
-	
-	clientStore, _ := pg.NewClientStore(adapter)
+  // use PostgreSQL token store with pgx.Connection adapter
+  adapter := pgx4adapter.NewConn(pgxConn)
+  tokenStore, _ := pg.NewTokenStore(adapter, pg.WithTokenStoreGCInterval(time.Minute))
+  defer tokenStore.Close()
 
-	manager.MapTokenStorage(tokenStore)
-	manager.MapClientStorage(clientStore)
-	// ...
+  clientStore, _ := pg.NewClientStore(adapter)
+
+  manager.MapTokenStorage(tokenStore)
+  manager.MapClientStorage(clientStore)
+  // ...
 }
 ```
 
@@ -70,6 +71,4 @@ if they are not started yet and runs go tests with coverage.
 
 ## MIT License
 
-```
-Copyright (c) 2020 Vladimir Garvardt
-```
+> Copyright (c) 2020 Vladimir Garvardt

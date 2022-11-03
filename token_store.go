@@ -85,14 +85,14 @@ func (s *TokenStore) gc() {
 func (s *TokenStore) initTable() error {
 	return s.adapter.Exec(context.Background(), fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %[1]s (
-  id         BIGSERIAL   NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  code       TEXT        NOT NULL,
-  access     TEXT        NOT NULL,
-  refresh    TEXT        NOT NULL,
-  data       JSONB       NOT NULL,
-  CONSTRAINT %[1]s_pkey PRIMARY KEY (id)
+	id         BIGSERIAL   NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL,
+	expires_at TIMESTAMPTZ NOT NULL,
+	code       TEXT        NOT NULL,
+	access     TEXT        NOT NULL,
+	refresh    TEXT        NOT NULL,
+	data       JSONB       NOT NULL,
+	CONSTRAINT %[1]s_pkey PRIMARY KEY (id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_%[1]s_expires_at ON %[1]s (expires_at);
