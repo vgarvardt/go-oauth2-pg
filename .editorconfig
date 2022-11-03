@@ -23,3 +23,7 @@ ij_go_move_all_stdlib_imports_in_one_group = true
 [go.mod]
 indent_style = tab
 indent_size = 4
+
+[Makefile]
+indent_style = tab
+indent_size = 4

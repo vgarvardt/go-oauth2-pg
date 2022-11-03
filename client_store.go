@@ -57,11 +57,11 @@ func NewClientStore(adapter pgAdapter.Adapter, options ...ClientStoreOption) (*C
 func (s *ClientStore) initTable() error {
 	return s.adapter.Exec(context.Background(), fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %[1]s (
-  id     TEXT  NOT NULL,
-  secret TEXT  NOT NULL,
-  domain TEXT  NOT NULL,
-  data   JSONB NOT NULL,
-  CONSTRAINT %[1]s_pkey PRIMARY KEY (id)
+	id     TEXT  NOT NULL,
+	secret TEXT  NOT NULL,
+	domain TEXT  NOT NULL,
+	data   JSONB NOT NULL,
+	CONSTRAINT %[1]s_pkey PRIMARY KEY (id)
 );
 `, s.tableName))
 }
