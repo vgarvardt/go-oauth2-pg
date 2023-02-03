@@ -35,8 +35,8 @@ github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4
 github.com/gavv/httpexpect v2.0.0+incompatible/go.mod h1:x+9tiU1YnrOvnB725RkpoLv1M62hOWzwo5OXotisrKc=
 github.com/go-kit/log v0.1.0/go.mod h1:zbhenjAZHb184qTLMA9ZjW7ThYL0H2mk7Q6pNt4vbaY=
 github.com/go-logfmt/logfmt v0.5.0/go.mod h1:wCYkCAKZfumFQihp8CzCvQ3paCTfi41vtzG1KdI/P7A=
-github.com/go-oauth2/oauth2/v4 v4.5.1 h1:3vxp+cjLqDe1TbogbwtMyeHRHr1tD+ksrK7xNppYRDs=
-github.com/go-oauth2/oauth2/v4 v4.5.1/go.mod h1:wk/2uLImWIa9VVQDgxz99H2GDbhmfi/9/Xr+GvkSUSQ=
+github.com/go-oauth2/oauth2/v4 v4.5.2 h1:CuZhD3lhGuI6aNLyUbRHXsgG2RwGRBOuCBfd4WQKqBQ=
+github.com/go-oauth2/oauth2/v4 v4.5.2/go.mod h1:wk/2uLImWIa9VVQDgxz99H2GDbhmfi/9/Xr+GvkSUSQ=
 github.com/go-session/session v3.1.2+incompatible/go.mod h1:8B3iivBQjrz/JtC68Np2T1yBBLxTan3mn/3OM0CyRt0=
 github.com/go-sql-driver/mysql v1.4.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
