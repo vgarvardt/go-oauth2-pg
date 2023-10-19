@@ -57,10 +57,10 @@ func NewClientStore(adapter pgAdapter.Adapter, options ...ClientStoreOption) (*C
 func (s *ClientStore) initTable() error {
 	return s.adapter.Exec(context.Background(), fmt.Sprintf(`
 CREATE TABLE IF NOT EXISTS %[1]s (
-	id     TEXT  NOT NULL,
-	secret TEXT  NOT NULL,
-	domain TEXT  NOT NULL,
-	data   JSONB NOT NULL,
+	"id"     TEXT  NOT NULL,
+	"secret" TEXT  NOT NULL,
+	"domain" TEXT  NOT NULL,
+	"data"   JSONB NOT NULL,
 	CONSTRAINT %[1]s_pkey PRIMARY KEY (id)
 );
 `, s.tableName))
@@ -79,7 +79,7 @@ func (s *ClientStore) GetByID(ctx context.Context, id string) (oauth2.ClientInfo
 	}
 
 	var item ClientStoreItem
-	if err := s.adapter.SelectOne(ctx, &item, fmt.Sprintf("SELECT * FROM %s WHERE id = $1", s.tableName), id); err != nil {
+	if err := s.adapter.SelectOne(ctx, &item, fmt.Sprintf(`SELECT "id", "secret", "domain", "data" FROM "%s" WHERE "id" = $1`, s.tableName), id); err != nil {
 		return nil, err
 	}
 
@@ -95,7 +95,7 @@ func (s *ClientStore) Create(info oauth2.ClientInfo) error {
 
 	return s.adapter.Exec(
 		context.Background(),
-		fmt.Sprintf("INSERT INTO %s (id, secret, domain, data) VALUES ($1, $2, $3, $4)", s.tableName),
+		fmt.Sprintf(`INSERT INTO %s ("id", "secret", "domain", "data") VALUES ($1, $2, $3, $4)`, s.tableName),
 		info.GetID(),
 		info.GetSecret(),
 		info.GetDomain(),
