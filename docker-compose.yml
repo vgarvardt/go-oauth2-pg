@@ -14,7 +14,7 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: ["CMD", "pg_isready"]
       interval: 10s
       timeout: 5s
       retries: 5
