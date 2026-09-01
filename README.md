@@ -31,26 +31,25 @@ package main
 
 import (
   "context"
+  "database/sql"
   "os"
   "time"
 
   "github.com/go-oauth2/oauth2/v4/manage"
-  "github.com/jackc/pgx/v4"
+  _ "github.com/lib/pq" // register driver
   pg "github.com/vgarvardt/go-oauth2-pg/v4"
-  "github.com/vgarvardt/go-pg-adapter/pgx4adapter"
 )
 
 func main() {
-  pgxConn, _ := pgx.Connect(context.TODO(), os.Getenv("DB_URI"))
+  conn, err := sql.Open("postgres", os.Getenv("DB_URI"))
 
   manager := manage.NewDefaultManager()
 
   // use PostgreSQL token store with pgx.Connection adapter
-  adapter := pgx4adapter.NewConn(pgxConn)
-  tokenStore, _ := pg.NewTokenStore(adapter, pg.WithTokenStoreGCInterval(time.Minute))
+  tokenStore, _ := pg.NewTokenStore(context.TODO(), conn, pg.WithTokenStoreGCInterval(time.Minute))
   defer tokenStore.Close()
 
-  clientStore, _ := pg.NewClientStore(adapter)
+  clientStore, _ := pg.NewClientStore(context.TODO(), conn)
 
   manager.MapTokenStorage(tokenStore)
   manager.MapClientStorage(clientStore)
@@ -71,4 +70,4 @@ if they are not started yet and runs go tests with coverage.
 
 ## MIT License
 
-> Copyright (c) 2020 Vladimir Garvardt
+> Copyright (c) 2020 Wladimir Harwardt

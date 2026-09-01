@@ -12,7 +12,7 @@ import (
 )
 
 func TestWithClientStoreInitTableDisabled(t *testing.T) {
-	store, err := NewClientStore(nil, WithClientStoreInitTableDisabled())
+	store, err := NewClientStore(t.Context(), nil, WithClientStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.True(t, store.initTableDisabled)
 }
@@ -20,7 +20,7 @@ func TestWithClientStoreInitTableDisabled(t *testing.T) {
 func TestWithClientStoreTableName(t *testing.T) {
 	randomName := time.Now().String()
 
-	store, err := NewClientStore(nil, WithClientStoreTableName(randomName), WithClientStoreInitTableDisabled())
+	store, err := NewClientStore(t.Context(), nil, WithClientStoreTableName(randomName), WithClientStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.Equal(t, randomName, store.tableName)
 }
@@ -29,7 +29,7 @@ func TestWithClientStoreLogger(t *testing.T) {
 	buf := new(bytes.Buffer)
 	l := slog.New(slog.NewTextHandler(buf, nil))
 
-	store, err := NewClientStore(nil, WithClientStoreLogger(l), WithClientStoreInitTableDisabled())
+	store, err := NewClientStore(t.Context(), nil, WithClientStoreLogger(l), WithClientStoreInitTableDisabled())
 	require.NoError(t, err)
 
 	store.logger.Info("log1", slog.Int("int", 1), slog.String("string", "hello"))

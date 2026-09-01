@@ -1,25 +1,27 @@
 package pg
 
 import (
-	"strings"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestClientStore_initTable(t *testing.T) {
-	adapter := new(mockAdapter)
-
-	adapter.On("Exec", mock.Anything, mock.Anything, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
-		query := args.Get(1).(string)
-		// new line character is the character at position 0
-		assert.Equal(t, 1, strings.Index(query, "CREATE TABLE IF NOT EXISTS"))
-	})
-
-	_, err := NewClientStore(adapter)
+	mockDB, mock, err := sqlmock.New()
 	require.NoError(t, err)
 
-	adapter.AssertExpectations(t)
+	t.Cleanup(func() {
+		mock.ExpectClose()
+		assert.NoError(t, mockDB.Close())
+	})
+
+	mock.ExpectExec("CREATE TABLE IF NOT EXISTS").WillReturnResult(sqlmock.NewResult(0, 1))
+
+	_, err = NewClientStore(t.Context(), mockDB)
+	require.NoError(t, err)
+
+	err = mock.ExpectationsWereMet()
+	require.NoError(t, err)
 }
