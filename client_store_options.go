@@ -1,5 +1,7 @@
 package pg
 
+import "log/slog"
+
 // ClientStoreOption is the configuration options type for client store
 type ClientStoreOption func(s *ClientStore)
 
@@ -11,7 +13,7 @@ func WithClientStoreTableName(tableName string) ClientStoreOption {
 }
 
 // WithClientStoreLogger returns option that sets client store logger implementation
-func WithClientStoreLogger(logger Logger) ClientStoreOption {
+func WithClientStoreLogger(logger *slog.Logger) ClientStoreOption {
 	return func(s *ClientStore) {
 		s.logger = logger
 	}

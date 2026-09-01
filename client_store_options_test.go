@@ -1,6 +1,9 @@
 package pg
 
 import (
+	"bytes"
+	"log/slog"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,27 +26,25 @@ func TestWithClientStoreTableName(t *testing.T) {
 }
 
 func TestWithClientStoreLogger(t *testing.T) {
-	l := new(memoryLogger)
+	buf := new(bytes.Buffer)
+	l := slog.New(slog.NewTextHandler(buf, nil))
 
 	store, err := NewClientStore(nil, WithClientStoreLogger(l), WithClientStoreInitTableDisabled())
 	require.NoError(t, err)
 
-	store.logger.Printf("log1", 1, "2", "333")
-	store.logger.Printf("log2", 12, "22")
+	store.logger.Info("log1", slog.Int("int", 1), slog.String("string", "hello"))
+	store.logger.Error("log2", slog.Int("int", 12), slog.String("string", "22"))
 
-	require.Equal(t, 2, len(l.formats))
-	require.Equal(t, 2, len(l.args))
+	logs := strings.Split(strings.TrimSpace(buf.String()), "\n")
+	require.Len(t, logs, 2)
 
-	assert.Equal(t, "log1", l.formats[0])
-	assert.Equal(t, "log2", l.formats[1])
+	assert.Contains(t, logs[0], "level=INFO")
+	assert.Contains(t, logs[0], "msg=log1")
+	assert.Contains(t, logs[0], "int=1")
+	assert.Contains(t, logs[0], "string=hello")
 
-	require.Equal(t, 3, len(l.args[0]))
-	require.Equal(t, 2, len(l.args[1]))
-
-	assert.Equal(t, 1, l.args[0][0])
-	assert.Equal(t, "2", l.args[0][1])
-	assert.Equal(t, "333", l.args[0][2])
-
-	assert.Equal(t, 12, l.args[1][0])
-	assert.Equal(t, "22", l.args[1][1])
+	assert.Contains(t, logs[1], "level=ERROR")
+	assert.Contains(t, logs[1], "msg=log2")
+	assert.Contains(t, logs[1], "int=12")
+	assert.Contains(t, logs[1], "string=22")
 }
