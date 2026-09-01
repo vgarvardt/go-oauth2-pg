@@ -3,9 +3,9 @@ name: Testing
 
 on:
   push:
-    branches: [ master, v3 ]
+    branches: [master, v3]
   pull_request:
-    branches: [ master, v3 ]
+    branches: [master, v3]
 
 jobs:
   test:
@@ -44,8 +44,11 @@ jobs:
           PG_URI: "postgres://test:test@localhost:5432/test?sslmode=disable"
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
         if: success()
+        uses: codecov/codecov-action@v7
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
-          file: ./coverage.txt
+          files: ./coverage.txt
           fail_ci_if_error: false
+
