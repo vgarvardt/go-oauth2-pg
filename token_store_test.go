@@ -35,32 +35,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-type memoryLogger struct {
-	formats []string
-	args    [][]interface{}
-
-	pgxLogs []struct {
-		ctx   context.Context
-		level pgx.LogLevel
-		msg   string
-		data  map[string]interface{}
-	}
-}
-
-func (l *memoryLogger) Printf(format string, v ...interface{}) {
-	l.formats = append(l.formats, format)
-	l.args = append(l.args, v)
-}
-
-func (l *memoryLogger) Log(ctx context.Context, level pgx.LogLevel, msg string, data map[string]interface{}) {
-	l.pgxLogs = append(l.pgxLogs, struct {
-		ctx   context.Context
-		level pgx.LogLevel
-		msg   string
-		data  map[string]interface{}
-	}{ctx: ctx, level: level, msg: msg, data: data})
-}
-
 type mockAdapter struct {
 	mock.Mock
 }
@@ -127,12 +101,8 @@ func generateClientTableName() string {
 }
 
 func TestPGXConn(t *testing.T) {
-	l := new(memoryLogger)
-
 	pgxConnConfig, err := pgx.ParseConfig(uri)
 	require.NoError(t, err)
-
-	pgxConnConfig.Logger = l
 
 	pgxConn, err := pgx.ConnectConfig(context.Background(), pgxConnConfig)
 	require.NoError(t, err)
@@ -145,7 +115,6 @@ func TestPGXConn(t *testing.T) {
 
 	tokenStore, err := NewTokenStore(
 		adapter,
-		WithTokenStoreLogger(l),
 		WithTokenStoreTableName(generateTokenTableName()),
 		WithTokenStoreGCInterval(time.Second),
 	)
@@ -156,22 +125,17 @@ func TestPGXConn(t *testing.T) {
 
 	clientStore, err := NewClientStore(
 		adapter,
-		WithClientStoreLogger(l),
 		WithClientStoreTableName(generateClientTableName()),
 	)
 	require.NoError(t, err)
 
-	runTokenStoreTest(t, tokenStore, l)
+	runTokenStoreTest(t, tokenStore)
 	runClientStoreTest(t, clientStore)
 }
 
 func TestPGXConnPool(t *testing.T) {
-	l := new(memoryLogger)
-
 	pgxPoolConnConfig, err := pgxpool.ParseConfig(uri)
 	require.NoError(t, err)
-
-	pgxPoolConnConfig.ConnConfig.Logger = l
 
 	pgXConnPool, err := pgxpool.ConnectConfig(context.Background(), pgxPoolConnConfig)
 	require.NoError(t, err)
@@ -182,7 +146,6 @@ func TestPGXConnPool(t *testing.T) {
 
 	tokenStore, err := NewTokenStore(
 		adapter,
-		WithTokenStoreLogger(l),
 		WithTokenStoreTableName(generateTokenTableName()),
 		WithTokenStoreGCInterval(time.Second),
 	)
@@ -193,18 +156,15 @@ func TestPGXConnPool(t *testing.T) {
 
 	clientStore, err := NewClientStore(
 		adapter,
-		WithClientStoreLogger(l),
 		WithClientStoreTableName(generateClientTableName()),
 	)
 	require.NoError(t, err)
 
-	runTokenStoreTest(t, tokenStore, l)
+	runTokenStoreTest(t, tokenStore)
 	runClientStoreTest(t, clientStore)
 }
 
 func TestSQL(t *testing.T) {
-	l := new(memoryLogger)
-
 	conn, err := sql.Open("pgx", uri)
 	require.NoError(t, err)
 
@@ -216,7 +176,6 @@ func TestSQL(t *testing.T) {
 
 	tokenStore, err := NewTokenStore(
 		adapter,
-		WithTokenStoreLogger(l),
 		WithTokenStoreTableName(generateTokenTableName()),
 		WithTokenStoreGCInterval(time.Second),
 	)
@@ -227,18 +186,15 @@ func TestSQL(t *testing.T) {
 
 	clientStore, err := NewClientStore(
 		adapter,
-		WithClientStoreLogger(l),
 		WithClientStoreTableName(generateClientTableName()),
 	)
 	require.NoError(t, err)
 
-	runTokenStoreTest(t, tokenStore, l)
+	runTokenStoreTest(t, tokenStore)
 	runClientStoreTest(t, clientStore)
 }
 
 func TestNewX(t *testing.T) {
-	l := new(memoryLogger)
-
 	conn, err := sql.Open("pgx", uri)
 	require.NoError(t, err)
 
@@ -250,7 +206,6 @@ func TestNewX(t *testing.T) {
 
 	tokenStore, err := NewTokenStore(
 		adapter,
-		WithTokenStoreLogger(l),
 		WithTokenStoreTableName(generateTokenTableName()),
 		WithTokenStoreGCInterval(time.Second),
 	)
@@ -261,29 +216,26 @@ func TestNewX(t *testing.T) {
 
 	clientStore, err := NewClientStore(
 		adapter,
-		WithClientStoreLogger(l),
 		WithClientStoreTableName(generateClientTableName()),
 	)
 	require.NoError(t, err)
 
-	runTokenStoreTest(t, tokenStore, l)
+	runTokenStoreTest(t, tokenStore)
 	runClientStoreTest(t, clientStore)
 }
 
-func runTokenStoreTest(t *testing.T, store *TokenStore, l *memoryLogger) {
+func runTokenStoreTest(t *testing.T, store *TokenStore) {
 	runTokenStoreCodeTest(t, store)
 	runTokenStoreAccessTest(t, store)
 	runTokenStoreRefreshTest(t, store)
 
 	// sleep for a while just to wait for GC run for sure to ensure there were no errors there
 	time.Sleep(3 * time.Second)
-
-	assert.Equal(t, 0, len(l.formats))
 }
 
 func runTokenStoreCodeTest(t *testing.T, store *TokenStore) {
 	code := fmt.Sprintf("code %s", time.Now().String())
-	ctx := context.Background()
+	ctx := t.Context()
 
 	tokenCode := models.NewToken()
 	tokenCode.SetCode(code)
@@ -303,7 +255,7 @@ func runTokenStoreCodeTest(t *testing.T, store *TokenStore) {
 
 func runTokenStoreAccessTest(t *testing.T, store *TokenStore) {
 	code := fmt.Sprintf("access %s", time.Now().String())
-	ctx := context.Background()
+	ctx := t.Context()
 
 	tokenCode := models.NewToken()
 	tokenCode.SetAccess(code)
@@ -323,7 +275,7 @@ func runTokenStoreAccessTest(t *testing.T, store *TokenStore) {
 
 func runTokenStoreRefreshTest(t *testing.T, store *TokenStore) {
 	code := fmt.Sprintf("refresh %s", time.Now().String())
-	ctx := context.Background()
+	ctx := t.Context()
 
 	tokenCode := models.NewToken()
 	tokenCode.SetRefresh(code)

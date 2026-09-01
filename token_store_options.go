@@ -1,6 +1,9 @@
 package pg
 
-import "time"
+import (
+	"log/slog"
+	"time"
+)
 
 // TokenStoreOption is the configuration options type for token store
 type TokenStoreOption func(s *TokenStore)
@@ -20,7 +23,7 @@ func WithTokenStoreGCInterval(gcInterval time.Duration) TokenStoreOption {
 }
 
 // WithTokenStoreLogger returns option that sets token store logger implementation
-func WithTokenStoreLogger(logger Logger) TokenStoreOption {
+func WithTokenStoreLogger(logger *slog.Logger) TokenStoreOption {
 	return func(s *TokenStore) {
 		s.logger = logger
 	}

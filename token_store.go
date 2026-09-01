@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
+	"log/slog"
 	"time"
 
 	"github.com/go-oauth2/oauth2/v4"
@@ -14,11 +13,13 @@ import (
 	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 )
 
+var _ oauth2.TokenStore = (*TokenStore)(nil)
+
 // TokenStore PostgreSQL token store
 type TokenStore struct {
 	adapter   pgAdapter.Adapter
 	tableName string
-	logger    Logger
+	logger    *slog.Logger
 
 	gcDisabled bool
 	gcInterval time.Duration
@@ -43,7 +44,7 @@ func NewTokenStore(adapter pgAdapter.Adapter, options ...TokenStoreOption) (*Tok
 	store := &TokenStore{
 		adapter:    adapter,
 		tableName:  "oauth2_tokens",
-		logger:     log.New(os.Stderr, "[OAUTH2-PG-ERROR]", log.LstdFlags),
+		logger:     slog.New(slog.DiscardHandler),
 		gcInterval: 10 * time.Minute,
 	}
 
@@ -106,7 +107,7 @@ func (s *TokenStore) clean() {
 	now := time.Now()
 	err := s.adapter.Exec(context.Background(), fmt.Sprintf("DELETE FROM %s WHERE expires_at <= $1", s.tableName), now)
 	if err != nil {
-		s.logger.Printf("Error while cleaning out outdated entities: %+v", err)
+		s.logger.Error("Error while cleaning out outdated entities", slog.Any("error", err))
 	}
 }
 

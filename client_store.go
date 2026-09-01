@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
+	"log/slog"
 
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/models"
@@ -13,11 +12,13 @@ import (
 	pgAdapter "github.com/vgarvardt/go-pg-adapter"
 )
 
+var _ oauth2.ClientStore = (*ClientStore)(nil)
+
 // ClientStore PostgreSQL client store
 type ClientStore struct {
 	adapter   pgAdapter.Adapter
 	tableName string
-	logger    Logger
+	logger    *slog.Logger
 
 	initTableDisabled bool
 }
@@ -35,7 +36,7 @@ func NewClientStore(adapter pgAdapter.Adapter, options ...ClientStoreOption) (*C
 	store := &ClientStore{
 		adapter:   adapter,
 		tableName: "oauth2_clients",
-		logger:    log.New(os.Stderr, "[OAUTH2-PG-ERROR]", log.LstdFlags),
+		logger:    slog.New(slog.DiscardHandler),
 	}
 
 	for _, o := range options {
