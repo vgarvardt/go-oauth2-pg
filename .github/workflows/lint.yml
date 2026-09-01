@@ -19,13 +19,13 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: super-linter/super-linter@v8
         env:
           VALIDATE_ALL_CODEBASE: ${{ github.event_name != 'pull_request' }}
           DEFAULT_BRANCH: master
@@ -33,14 +33,16 @@ jobs:
           # go validator works pretty bad in super-linter, we'll use the original one
           VALIDATE_GO: false
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: Setup Golang
+        uses: actions/setup-go@v6
         with:
-          go-version-file: ./go.mod
+          go-version-file: "./go.mod"
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lint Golang
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v9
         with:
           only-new-issues: ${{ github.event_name == 'pull_request' }}
           args: >
             --config=./.github/linters/.golangci.yml
+            --timeout=5m
