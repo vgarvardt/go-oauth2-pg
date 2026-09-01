@@ -41,9 +41,9 @@ func TestTokenStore_initTable(t *testing.T) {
 	store, err := NewTokenStore(t.Context(), mockDB, WithTokenStoreGCDisabled())
 	require.NoError(t, err)
 
-	defer func() {
+	t.Cleanup(func() {
 		assert.NoError(t, store.Close())
-	}()
+	})
 }
 
 func TestTokenStore_gc(t *testing.T) {
@@ -82,9 +82,9 @@ func TestSQL(t *testing.T) {
 	conn, err := sql.Open("postgres", uri)
 	require.NoError(t, err)
 
-	defer func() {
+	t.Cleanup(func() {
 		assert.NoError(t, conn.Close())
-	}()
+	})
 
 	tokenStore, err := NewTokenStore(
 		t.Context(),
@@ -93,9 +93,9 @@ func TestSQL(t *testing.T) {
 		WithTokenStoreGCInterval(time.Second),
 	)
 	require.NoError(t, err)
-	defer func() {
+	t.Cleanup(func() {
 		assert.NoError(t, tokenStore.Close())
-	}()
+	})
 
 	clientStore, err := NewClientStore(
 		t.Context(),
