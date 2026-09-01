@@ -1,6 +1,6 @@
 module github.com/vgarvardt/go-oauth2-pg/v4
 
-go 1.25
+go 1.25.0
 
 require (
 	github.com/go-oauth2/oauth2/v4 v4.5.4
@@ -22,6 +22,6 @@ require (
 	github.com/stretchr/objx v0.5.3 // indirect
 	github.com/vgarvardt/pgx-helpers/v4 v4.2.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
 )
