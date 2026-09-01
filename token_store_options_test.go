@@ -13,7 +13,7 @@ import (
 )
 
 func TestWithTokenStoreGCDisabled(t *testing.T) {
-	store, err := NewTokenStore(nil, WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
+	store, err := NewTokenStore(t.Context(), nil, WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.True(t, store.gcDisabled)
 	assert.True(t, store.initTableDisabled)
@@ -22,7 +22,7 @@ func TestWithTokenStoreGCDisabled(t *testing.T) {
 func TestWithTokenStoreTableName(t *testing.T) {
 	randomName := time.Now().String()
 
-	store, err := NewTokenStore(nil, WithTokenStoreTableName(randomName), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
+	store, err := NewTokenStore(t.Context(), nil, WithTokenStoreTableName(randomName), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.Equal(t, randomName, store.tableName)
 }
@@ -30,7 +30,7 @@ func TestWithTokenStoreTableName(t *testing.T) {
 func TestWithTokenStoreGCInterval(t *testing.T) {
 	randomInterval := time.Duration(rand.Int63())
 
-	store, err := NewTokenStore(nil, WithTokenStoreGCInterval(randomInterval), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
+	store, err := NewTokenStore(t.Context(), nil, WithTokenStoreGCInterval(randomInterval), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 	assert.Equal(t, randomInterval, store.gcInterval)
 }
@@ -39,7 +39,7 @@ func TestWithTokenStoreLogger(t *testing.T) {
 	buf := new(bytes.Buffer)
 	l := slog.New(slog.NewTextHandler(buf, nil))
 
-	store, err := NewTokenStore(nil, WithTokenStoreLogger(l), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
+	store, err := NewTokenStore(t.Context(), nil, WithTokenStoreLogger(l), WithTokenStoreGCDisabled(), WithTokenStoreInitTableDisabled())
 	require.NoError(t, err)
 
 	store.logger.Info("log1", slog.Int("int", 1), slog.String("string", "hello"))
